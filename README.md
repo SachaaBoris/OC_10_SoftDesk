@@ -1,6 +1,6 @@
 # OC_10 SoftDesk Support (WIP) :beetle:  
 
-[[softdesk_logo.png]]
+[["https://github.com/SachaaBoris/OC_10_LitRevu/blob/main/softdesk_logo.png"]]
   
 # ● Description du projet  
 SoftDesk Support est un outil de suivi de projet / gestion des problèmes techniques collaboratif. Développé en architecture API django Rest, elle s'adresse aux entreprises en Business to Business.  
