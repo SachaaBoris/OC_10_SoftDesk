@@ -73,14 +73,14 @@ Permissions par défaut :
 	Vous pouvez également supprimer les images des anciens tickets du dossier media/tickets
 	Et rentrer les commandes suivantes pour créer une nouvelle BDD
   ``` 
-  py litrevu/manage.py makemigrations
-  py litrevu/manage.py migrate
+  py softdesk/manage.py makemigrations
+  py softdesk/manage.py migrate
   ``` 
   
 6. Créer un SuperUser :  
 	Rentrez la commande suivante et suivez les instructions  
   ``` 
-	py litrevu/manage.py createsuperuser
+	py softdesk/manage.py createsuperuser
   ```  
   
 7. Noubliez pas de switcher ces variables dans les settings du projet avant mise en production :  
