@@ -1,7 +1,10 @@
 asgiref
 Django
-django-cleanup
-pillow
 python-decouple
+djangorestframework
+djangorestframework-simplejwt
+drf-nested-routers
+PyJWT
+pytz
 sqlparse
 tzdata
