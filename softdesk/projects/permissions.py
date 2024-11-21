@@ -2,103 +2,110 @@
 Custom permissions.
 """
 from rest_framework import permissions
-from .models import Contributor
-from .checker import check_project_exist_in_db
+from projects.models import Contributor
 
-
-class IsAuthor(permissions.BasePermission):
-    """Custom permission to check if connected user is the object author."""
-
-    message = "Il faut être l'auteur de cet objet pour effectuer cet action."
-
+class IsProjectContributor(permissions.BasePermission):
+    """
+    Permission vérifiant si l'utilisateur est contributeur du projet.
+    """
     def has_object_permission(self, request, view, obj):
-        if request.user.is_superuser:
-            return True
-
-        if obj.author_user == request.user:
-            return True
-        return False
-
-
-class IsContributor(permissions.BasePermission):
-    """Custom permission to check if connected user is project contributor."""
-
-    message = (
-        "Il faut être un contributeur du projet pour effectuer cette action."
-    )
-
-    def has_permission(self, request, view):
-        if request.user.is_superuser:
-            return True
-
-        project_id = None
-        if view.basename == "project" and view.detail is False:
-            return True
-        if view.basename == "project" and view.detail is True:
-            project_id = request.parser_context["kwargs"]["pk"]
-        if view.basename != "project":
-            project_id = request.parser_context["kwargs"]["project_pk"]
-        check_project_exist_in_db(project_id)
-        if project_id:
-            try:
-                if Contributor.objects.filter(
-                    project_id=int(project_id), user_id=request.user.id
-                ):
-                    return True
-            except Contributor.DoesNotExist:
-                return False
-
-        return False
-
-    def has_object_permission(self, request, view, obj):
-        if request.user.is_superuser:
-            return True
+        # Obtenir le projet (soit directement, soit via l'issue ou le commentaire)
+        if hasattr(obj, 'project'):
+            project = obj.project
         else:
-            project_id = obj.project_id
-        if Contributor.objects.filter(
-            project_id=int(project_id), user_id=request.user.id
-        ):
-            return True
+            project = obj
 
+        return Contributor.objects.filter(
+            user=request.user,
+            project=project
+        ).exists()
+
+class IsProjectAuthor(permissions.BasePermission):
+    """
+    Permission vérifiant si l'utilisateur est l'auteur du projet.
+    """
+    def has_object_permission(self, request, view, obj):
+        # Obtenir le projet (soit directement, soit via l'issue ou le commentaire)
+        if hasattr(obj, 'project'):
+            project = obj.project
+        else:
+            project = obj
+            
+        return project.author_user == request.user
+
+class IsProjectContributorOrAuthor(permissions.BasePermission):
+    """
+    Permission vérifiant si l'utilisateur est soit contributeur soit auteur du projet.
+    """
+    def has_object_permission(self, request, view, obj):
+        # Obtenir le projet (soit directement, soit via l'issue ou le commentaire)
+        if hasattr(obj, 'project'):
+            project = obj.project
+        else:
+            project = obj
+
+        # Vérifier si l'utilisateur est l'auteur
+        is_author = project.author_user == request.user
+        
+        # Vérifier si l'utilisateur est contributeur
+        is_contributor = Contributor.objects.filter(
+            user=request.user,
+            project=project
+        ).exists()
+
+        return is_author or is_contributor
+
+
+class IsAdminOrOwner(permissions.BasePermission):
+    """
+    Permission vérifiant si l'utilisateur est admin ou propriétaire de la ressource.
+    """
+    def has_object_permission(self, request, view, obj):
+        # Admin a tous les droits
+        if request.user.is_staff or request.user.is_superuser:
+            return True
+        
+        # Vérification spécifique selon le type d'objet
+        if hasattr(obj, 'author_user'):
+            return obj.author_user == request.user
+        
+        # Pour les utilisateurs, vérifier si c'est le même utilisateur
+        if isinstance(obj, User):
+            return obj == request.user
+        
         return False
 
 
-class IsResponsibleContributor(permissions.BasePermission):
+class IsAdminOrProjectContributor(permissions.BasePermission):
     """
-    Custom permission to check if connected user is responsible project contributor.
+    Permission vérifiant si l'utilisateur est admin ou contributeur du projet.
     """
-
-    message = "Il faut être un contributeur de type responsable du projet pour effectuer cette action."
-
     def has_permission(self, request, view):
-        if request.user.is_superuser:
+        # Admin a tous les droits
+        if request.user.is_staff or request.user.is_superuser:
             return True
-
-        project_id = request.parser_context["kwargs"]["project_pk"]
-        check_project_exist_in_db(project_id)
-        try:
-            if (
-                Contributor.objects.get(
-                    project_id=int(project_id), user_id=request.user.id
-                ).permission
-                == "Responsable"
-            ):
-                return True
-        except Contributor.DoesNotExist:
-            return False
-
+        
+        # Pour les vues sur projet, vérifier si contributeur
+        if 'project_pk' in view.kwargs:
+            return Contributor.objects.filter(
+                user=request.user,
+                project_id=view.kwargs['project_pk']
+            ).exists()
+        
         return False
 
     def has_object_permission(self, request, view, obj):
-        if request.user.is_superuser:
+        # Admin a tous les droits
+        if request.user.is_staff or request.user.is_superuser:
             return True
+        
+        # Obtenir le projet (soit directement, soit via l'issue ou le commentaire)
+        if hasattr(obj, 'project'):
+            project = obj.project
+        else:
+            project = obj
 
-        if (
-            Contributor.objects.get(
-                project_id=int(obj.project_id), user_id=request.user.id
-            ).permission
-            == "Responsable"
-        ):
-            return True
-
-        return False
+        return Contributor.objects.filter(
+            user=request.user,
+            project=project
+        ).exists()

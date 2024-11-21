@@ -2,46 +2,43 @@
 Provides serializers for objects of "Users" application.
 """
 from rest_framework import serializers
-from django.contrib.auth.password_validation import validate_password
 from .models import User
-from .checker import check_user_email_exist
 
+class UserDetailSerializer(serializers.ModelSerializer):
+    """Serializer pour les détails d'un utilisateur"""
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'age', 'can_be_contacted', 'can_data_be_shared']
+        read_only_fields = ['id']
 
-class SignUpSerializer(serializers.ModelSerializer):
-    """Sign up serializer."""
+class UserCreateSerializer(serializers.ModelSerializer):
+    """Serializer pour la création d'un utilisateur"""
+    password = serializers.CharField(write_only=True, required=True, style={'input_type': 'password'})
+    password_confirm = serializers.CharField(write_only=True, required=True, style={'input_type': 'password'})
 
     class Meta:
         model = User
-        fields = ("email", "username", "password", "age")
-        extra_kwargs = {
-            "password": {"write_only": True},
-            "age": {"required": True},
-        }
+        fields = ['username', 'email', 'age', 'password', 'password_confirm', 
+                 'can_be_contacted', 'can_data_be_shared']
+
+    def validate(self, attrs):
+        if attrs['password'] != attrs.pop('password_confirm'):
+            raise serializers.ValidationError({"password": "Les mots de passe ne correspondent pas."})
+        return attrs
 
     def create(self, validated_data):
-        password = validated_data.pop('password')
-        user = User(**validated_data)
-        user.set_password(password)
-        return User.objects.create_user(password=password, **validated_data)
+        user = User.objects.create_user(
+            username=validated_data['username'],
+            email=validated_data['email'],
+            age=validated_data['age'],
+            password=validated_data['password'],
+            can_be_contacted=validated_data.get('can_be_contacted', False),
+            can_data_be_shared=validated_data.get('can_data_be_shared', False)
+        )
+        return user
 
-    def validate(self, attrs):
-        user = User(**attrs)
-        password = attrs.get("password")
-        validate_password(password=password, user=user)
-
-        return super().validate(attrs)
-
-
-class UserSerializer(serializers.ModelSerializer):
-    """User object serializer."""
-
+class UserListSerializer(serializers.ModelSerializer):
+    """Serializer pour la liste des utilisateurs (admin seulement)"""
     class Meta:
         model = User
-        fields = ("email", "username", "password", "age")
-
-    def validate(self, attrs):
-        user = User(**attrs)
-        password = self.context["request"].data["password"]
-        validate_password(password=password, user=user)
-
-        return super().validate(attrs)
+        fields = ['id', 'username', 'email', 'age', 'is_active']

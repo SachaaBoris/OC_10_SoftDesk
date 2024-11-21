@@ -3,6 +3,7 @@ from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from django.utils.translation import gettext_lazy as _
 from .models import User
 from .models import Project, Contributor
+from .models import Issue, Comment
 from .forms import ProjectAdminForm
 
 
@@ -53,7 +54,8 @@ class ContributorInline(admin.TabularInline):
 
 
 class ContributorAdmin(admin.ModelAdmin):
-    list_display = ['user', 'project', 'role', 'permission']  # Liste des champs visibles
+    list_display = ['id','project', 'user', 'role', 'permission']  # Liste des champs visibles
+    ordering = ("id",)
 
     def get_readonly_fields(self, request, obj=None):
         """Rendre le champ project en lecture seule pour un contributeur existant."""
@@ -66,8 +68,8 @@ class ProjectAdmin(admin.ModelAdmin):
     """Admin view for Project."""
 
     # Affichage des champs dans la vue d'administration
-    list_display = ("title", "author_user", "type", "created_at", "get_contributors")
-    fields = ("title", "description", "type", "author_user", "created_at")
+    list_display = ("id", "title", "description", "type", "author_user", "created_at", "get_contributors")
+    fields = ("id", "title", "description", "type", "author_user", "created_at")
 
     readonly_fields = ("created_at", "author_user")
     
@@ -77,12 +79,26 @@ class ProjectAdmin(admin.ModelAdmin):
     def get_contributors(self, obj):
         """Returns a comma-separated list of contributors for a project."""
         return ", ".join([contrib.user.username for contrib in obj.contributor_set.all()])
-        #contributors = Contributor.objects.filter(project=obj)
-        #return ", ".join([contrib.user.username for contrib in contributors])
 
     get_contributors.short_description = 'Contributors'
+
+
+class IssueAdmin(admin.ModelAdmin):
+    """Admin view for Issue."""
+    list_display = ('id', 'title', 'description', 'tag', 'priority', 'status', 'project', 'author_user', 'assigned_user', 'created_time')
+    fields = ('title', 'description', 'tag', 'priority', 'status', 'project', 'author_user', 'assigned_user', 'created_time')
+    readonly_fields = ('created_time',)
+
+
+class CommentAdmin(admin.ModelAdmin):
+    """Admin view for the Comment model."""
+    list_display = ('id', 'description', 'issue', 'author_user', 'created_time')
+    fields = ('description', 'issue', 'author_user', 'created_time')
+    readonly_fields = ('created_time',)
 
 
 # Register your models here.
 admin.site.register(Contributor, ContributorAdmin)
 admin.site.register(Project, ProjectAdmin)
+admin.site.register(Issue, IssueAdmin)
+admin.site.register(Comment, CommentAdmin)

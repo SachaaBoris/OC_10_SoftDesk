@@ -1,62 +1,90 @@
 """
 Users views
 """
-from rest_framework import generics, viewsets, mixins
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
-from rest_framework.permissions import (
-    AllowAny,
-    IsAdminUser,
-    IsAuthenticated,
-    SAFE_METHODS,
-)
-from django.shortcuts import get_object_or_404
 from .models import User
-from .serializers import (
-    SignUpSerializer,
-    UserSerializer,
-)
+from .serializers import UserDetailSerializer, UserCreateSerializer, UserListSerializer
+from .permissions import IsAdminOrSelf
 
-class SignUp(generics.CreateAPIView):
-    """Concrete view for creating a model instance of user object."""
-    queryset = User.objects.all()
-    serializer_class = SignUpSerializer
-    permission_classes = [AllowAny]
+class UserViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet pour gérer les opérations CRUD sur les utilisateurs.
+    """
+    permission_classes = [IsAuthenticated, IsAdminOrSelf]
+    
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return UserCreateSerializer
+        elif self.action == 'list':
+            return UserListSerializer
+        return UserDetailSerializer
 
-
-class UserViewSet(
-    mixins.RetrieveModelMixin,
-    mixins.UpdateModelMixin,
-    mixins.DestroyModelMixin,
-    mixins.ListModelMixin,
-    viewsets.GenericViewSet,
-):
-    """A viewset that provides actions for user object."""
-
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    permission_classes = [IsAuthenticated]
-
-
-class MyInfo(generics.RetrieveAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-
-    def get_object(self):
-        """Returns the object the view is displaying."""
+    def get_queryset(self):
         user = self.request.user
+        # Si admin, tous les utilisateurs
+        if user.is_staff or user.is_superuser:
+            return User.objects.all()
+        # Sinon, uniquement l'utilisateur lui-même
+        return User.objects.filter(pk=user.pk)
 
-        # May raise a permission denied
-        self.check_object_permissions(self.request, user)
+    def list(self, request, *args, **kwargs):
+        # Seuls les admins peuvent lister tous les utilisateurs
+        if not request.user.is_staff and not request.user.is_superuser:
+            return Response(
+                {"detail": "Vous n'avez pas la permission de lister les utilisateurs."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        return super().list(request, *args, **kwargs)
 
-        return user
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            UserDetailSerializer(user).data,
+            status=status.HTTP_201_CREATED,
+            headers=headers
+        )
 
-    def retrieve(self, request, *args, **kwargs):
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
         instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        message = {
-            "To delete your personal information": "send a mail with your email account at your administrator."
-        }
-        data = serializer.data
-        data.update(message)
-        return Response(data)
+        
+        # Vérifier si l'utilisateur peut modifier ces données
+        if not (request.user.is_staff or request.user == instance):
+            return Response(
+                {"detail": "Vous n'avez pas la permission de modifier cet utilisateur."},
+                status=status.HTTP_403_FORBIDDEN
+            )
 
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        # Vérifier si l'utilisateur peut supprimer ces données
+        if not (request.user.is_staff or request.user == instance):
+            return Response(
+                {"detail": "Vous n'avez pas la permission de supprimer cet utilisateur."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=['get'])
+    def profile(self, request, pk=None):
+        """Endpoint supplémentaire pour voir son profil"""
+        user = self.get_object()
+        if not user.can_data_be_shared and not (request.user.is_staff or request.user == user):
+            return Response(
+                {"detail": "Les données de cet utilisateur ne peuvent pas être partagées."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        serializer = UserDetailSerializer(user)
+        return Response(serializer.data)

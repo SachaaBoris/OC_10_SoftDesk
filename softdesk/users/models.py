@@ -9,27 +9,18 @@ class UserManager(BaseUserManager):
 
     use_in_migrations = True
 
-    def _create_user(self, email, username, age, password, **extra_fields):
+    def create_user(self, email, username, age, password, **extra_fields):
         """Create and save a User with the given email, username, age, and password."""
-        if not email:
-            raise ValueError("You must provide an email")
-        if not username:
-            raise ValueError("You must provide a username")
-        if age is None:
-            raise ValueError("You must provide your age")
-
         email = self.normalize_email(email)
-        user = self.model(email=email, username=username, age=age, **extra_fields)
+        user = self.model(
+            email=email, 
+            username=username, 
+            age=age, 
+            can_be_contacted=extra_fields.pop('can_be_contacted', False),
+            can_data_be_shared=extra_fields.pop('can_data_be_shared', False),
+            **extra_fields
+        )
         user.set_password(password)
-
-        # Set default values based on age
-        if age < 18:
-            user.can_be_contacted = False
-            user.can_data_be_shared = False
-        else:
-            user.can_be_contacted = True
-            user.can_data_be_shared = True
-
         user.save(using=self._db)
         return user
 

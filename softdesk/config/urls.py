@@ -1,68 +1,121 @@
 """
-URL configuration for config project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.1/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+URL configuration
 """
 from django.contrib import admin
 from django.urls import path, include
-from rest_framework_simplejwt import views as jwt_views
-from rest_framework.routers import SimpleRouter
-from users.views import SignUp, UserViewSet, MyInfo
-from projects.views import ProjectViewSet, ContributorViewSet
+from rest_framework.routers import DefaultRouter
 from rest_framework_nested import routers
+from rest_framework_simplejwt import views as jwt_views
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-# Router for users
-user_router = SimpleRouter()
-user_router.register(r"accounts", UserViewSet, basename="user")
 
-# Router for projects
-project_router = SimpleRouter()
-project_router.register(r"projects", ProjectViewSet, basename="projects")
+from users.views import (
+    UserViewSet,
+)
+from projects.views import (
+    ProjectViewSet,
+    ContributorViewSet,
+    IssueViewSet,
+    CommentViewSet,
+)
 
-# Nested router for project contributors
-projects_router = routers.NestedSimpleRouter(project_router, r"projects", lookup="project")
-projects_router.register(r"users", ContributorViewSet, basename="project-users")
+# Router principal
+router = DefaultRouter()
+router.register(r'users', UserViewSet, basename='users')
+router.register(r'projects', ProjectViewSet, basename='projects')
 
-# Combine all URL patterns
-urlpatterns = user_router.urls + project_router.urls + projects_router.urls
+# Router imbriqué pour les contributeurs
+contributors_router = routers.NestedDefaultRouter(
+    router,
+    r'projects',
+    lookup='project'
+)
+contributors_router.register(
+    r'contributors',
+    ContributorViewSet,
+    basename='project-contributors'
+)
 
-urlpatterns += [
-    path("softdesk_api/admin/", admin.site.urls),
-    path(
-        "softdesk_api/login/",
-        jwt_views.TokenObtainPairView.as_view(),
-        name="token_obtain_pair",
-    ),
-    path(
-        "softdesk_api/login/refresh/",
-        jwt_views.TokenRefreshView.as_view(),
-        name="token_refresh",
-    ),
-    path("softdesk_api/signup/", SignUp.as_view()),
-    path("softdesk_api/myinfo/", MyInfo.as_view()),
-    path("softdesk_api/projects/create/", ProjectViewSet.as_view({'post': 'create'}), name='project-create'),
+# Router imbriqué pour les issues
+issues_router = routers.NestedDefaultRouter(
+    router,
+    r'projects',
+    lookup='project'
+)
+issues_router.register(
+    r'issues',
+    IssueViewSet,
+    basename='project-issues'
+)
+
+# Router imbriqué pour les commentaires
+comments_router = routers.NestedDefaultRouter(
+    issues_router,
+    r'issues',
+    lookup='issue'
+)
+comments_router.register(
+    r'comments',
+    CommentViewSet,
+    basename='issue-comments'
+)
+
+# Combine URL patterns
+urlpatterns = [
+    # Admin
+    path('softdesk_api/admin/', admin.site.urls),
+    
+    # Authentication endpoints
+    path('softdesk_api/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('softdesk_api/login/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    
+    # API endpoints
+    path('softdesk_api/', include([
+        path('', include(router.urls)),
+        path('', include(contributors_router.urls)),
+        path('', include(issues_router.urls)),
+        path('', include(comments_router.urls)),
+    ])),
 ]
 
-# URLs List :
-# ^accounts/$ [name='user-list']
-# ^accounts/(?P<pk>[^/.]+)/$ [name='user-detail']
-# ^projects/$ [name='projects-list']
-# ^projects/(?P<pk>[^/.]+)/$ [name='projects-detail']
-# ^projects/(?P<project_pk>[^/.]+)/users/$ [name='project-users-list']
-# ^projects/(?P<project_pk>[^/.]+)/users/(?P<pk>[^/.]+)/$ [name='project-users-detail']
-# sofdesk_api/admin/
-# sofdesk_api/login/ [name='token_obtain_pair']
-# sofdesk_api/login/refresh/ [name='token_refresh']
-# sofdesk_api/signup/
-# sofdesk_api/myinfo/
+
+### API Endpoints :
+# 
+### Authentication
+# POST   /softdesk_api/login/                                                           # Obtenir un token JWT
+# POST   /softdesk_api/login/refresh/                                                   # Rafraîchir un token JWT
+# 
+### Users
+# GET    /softdesk_api/users/                                                           # Liste des utilisateurs (admin uniquement)
+# POST   /softdesk_api/users/                                                           # Créer un utilisateur
+# GET    /softdesk_api/users/{user_id}/                                                 # Détails d'un utilisateur
+# PUT    /softdesk_api/users/{user_id}/                                                 # Modifier un utilisateur
+# DELETE /softdesk_api/users/{user_id}/                                                 # Supprimer un utilisateur
+# 
+### Projects
+# GET    /softdesk_api/projects/                                                        # Liste des projets
+# POST   /softdesk_api/projects/                                                        # Créer un projet
+# GET    /softdesk_api/projects/{project_id}/                                           # Détails d'un projet
+# PUT    /softdesk_api/projects/{project_id}/                                           # Modifier un projet
+# DELETE /softdesk_api/projects/{project_id}/                                           # Supprimer un projet
+# 
+### Contributors
+# GET    /softdesk_api/projects/{project_id}/contributors/                              # Liste des contributeurs
+# POST   /softdesk_api/projects/{project_id}/contributors/                              # Ajouter un contributeur
+# GET    /softdesk_api/projects/{project_id}/contributors/{contributor_id}/             # Détails d'un contributeur
+# PUT    /softdesk_api/projects/{project_id}/contributors/{contributor_id}/             # Modifier un contributeur
+# DELETE /softdesk_api/projects/{project_id}/contributors/{contributor_id}/             # Supprimer un contributeur
+# 
+### Issues
+# GET    /softdesk_api/projects/{project_id}/issues/                                    # Liste des issues
+# POST   /softdesk_api/projects/{project_id}/issues/                                    # Créer une issue
+# GET    /softdesk_api/projects/{project_id}/issues/{issue_id}/                         # Détails d'une issue
+# PUT    /softdesk_api/projects/{project_id}/issues/{issue_id}/                         # Modifier une issue
+# DELETE /softdesk_api/projects/{project_id}/issues/{issue_id}/                         # Supprimer une issue
+# 
+### Comments
+# GET    /softdesk_api/projects/{project_id}/issues/{issue_id}/comments/                # Liste des commentaires
+# POST   /softdesk_api/projects/{project_id}/issues/{issue_id}/comments/                # Créer un commentaire
+# GET    /softdesk_api/projects/{project_id}/issues/{issue_id}/comments/{comment_id}/   # Détails d'un commentaire
+# PUT    /softdesk_api/projects/{project_id}/issues/{issue_id}/comments/{comment_id}/   # Modifier un commentaire
+# DELETE /softdesk_api/projects/{project_id}/issues/{issue_id}/comments/{comment_id}/   # Supprimer un commentaire

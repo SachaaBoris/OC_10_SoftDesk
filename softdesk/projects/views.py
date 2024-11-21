@@ -1,149 +1,139 @@
-from rest_framework import generics, viewsets, mixins
+from rest_framework import viewsets, status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.permissions import (
-    IsAdminUser,
-    IsAuthenticated,
-    SAFE_METHODS,
-)
+from rest_framework.decorators import action
 from django.shortcuts import get_object_or_404
-from .models import Project, User, Contributor
-from .permissions import IsAuthor, IsContributor, IsResponsibleContributor
+
+from .models import Project, Contributor, Issue, Comment
 from .serializers import (
-    ProjectSerializer,
+    ProjectListSerializer,
+    ProjectDetailSerializer,
     ContributorSerializer,
-    ContributorAutoAssignUserSerializer
+    IssueSerializer,
+    CommentSerializer
 )
-from .checker import (
-    check_and_get_contributor_id,
-    check_project_exist_in_db
+from .permissions import (
+    IsAdminOrOwner, 
+    IsAdminOrProjectContributor, 
+    IsProjectAuthor
 )
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
-    """A viewset that provides actions for project object."""
+    serializer_class = ProjectListSerializer
+    
+    def get_permission_classes(self):
+        """
+        Instantiate and return the list of permissions that this view requires.
+        """
+        if self.action == 'list':
+            return [IsAuthenticated]  # Pour la liste, seulement authentifié suffit
+        return [IsAuthenticated, IsAdminOrProjectContributor]  # Pour les autres actions
 
-    queryset = Project.objects.all()
-    serializer_class = ProjectSerializer
-    permission_classes = [IsAuthenticated]
+    def get_queryset(self):
+        user = self.request.user
+        # Si admin, tous les projets
+        if user.is_staff or user.is_superuser:
+            return Project.objects.all()
+        # Pour les utilisateurs normaux, uniquement les projets où ils sont contributeurs
+        return Project.objects.filter(contributor__user=user).distinct()
 
     def perform_create(self, serializer):
-        """Create a project and set the author as first contributor"""
         project = serializer.save(author_user=self.request.user)
-        
-        # Add the creator as responsible contributor
-        Contributor.objects.create(
-            user=self.request.user,
-            project=project,
-            permission="Responsable",
-            role="Auteur"
-        )
-
-    def create_project_id_list_connected_user(self):
-        """Return project id list of the connected user."""
-        project_id_list = []
-        connected_user_id = self.request.user.id
-        for contributor in Contributor.objects.filter(
-            user_id=connected_user_id
-        ):
-            project_id_list.append(contributor.project_id)
-
-        return project_id_list
 
 
 class ContributorViewSet(viewsets.ModelViewSet):
-    """A viewset that provides actions for contributor object."""
-
-    queryset = Contributor.objects.all()
     serializer_class = ContributorSerializer
-    permission_classes = [IsAuthenticated, IsContributor]
-
-    def get_permissions(self):
-        """
-        Instantiates and returns the list of permissions that this view requires.
-        """
-        if self.request.method not in SAFE_METHODS:
-            return [
-                permission()
-                for permission in [IsResponsibleContributor, IsAuthenticated]
-            ]
-
-        return [permission() for permission in self.permission_classes]
-
-    def get_serializer_class(self):
-        """Return the class to use for the serializer."""
-        if self.action == "update":
-            return ContributorAutoAssignUserSerializer
-        return super().get_serializer_class()
-
-    def get_object(self):
-        """Returns the object the view is displaying."""
-        queryset = self.filter_queryset(self.get_queryset())
-        kwargs = {}
-        user_id = self.kwargs["pk"]
-        project_id = self.kwargs["project_pk"]
-        contributor_id = check_and_get_contributor_id(project_id, user_id)
-        kwargs["pk"] = contributor_id
-
-        obj = get_object_or_404(queryset, **kwargs)
-
-        # May raise a permission denied
-        self.check_object_permissions(self.request, obj)
-
-        return obj
+    permission_classes = [IsAuthenticated, IsAdminOrProjectContributor]
 
     def get_queryset(self):
-        """Get the list of items for this view."""
-        project_id = self.kwargs["project_pk"]
-        return super().get_queryset().filter(project_id=project_id)
+        project_pk = self.kwargs['project_pk']
+        # Si admin, tous les contributeurs, sinon vérifier
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            return Contributor.objects.filter(project_id=project_pk)
 
-    def perform_create(self, serializer):
-        """Create a model instance."""
-        project = serializer.save(author_user=self.request.user)
-
-        # Ajoute le créateur comme contributeur
-        Contributor.objects.create(
-            user=self.request.user,
-            project=project,
-            permission="Responsable",
-            role="Auteur"
+        # Vérifier si l'utilisateur est contributeur du projet
+        return Contributor.objects.filter(
+            project_id=project_pk,
+            project__contributor__user=self.request.user
         )
 
-        # Vérification des contributeurs
-        invalid_users = []
-        for username in serializer.validated_data.get('contributors', []):
-            try:
-                user = User.objects.get(username=username)
-                Contributor.objects.create(
-                    user=user,
-                    project=project,
-                    permission="Contributeur",
-                    role="Contributeur"
-                )
-            except User.DoesNotExist:
-                invalid_users.append(username)
+    def perform_create(self, serializer):
+        project = get_object_or_404(Project, pk=self.kwargs['project_pk'])
+        serializer.save(project=project)
 
-            if invalid_users:
-                return Response(
-                    {"warning": f"Les utilisateurs suivants n'existent pas : {', '.join(invalid_users)}"},
-                    status=status.HTTP_201_CREATED
-                )
 
-    def perform_update(self, serializer):
-        """Update a model instance."""
-        invalid_users = []
+class IssueViewSet(viewsets.ModelViewSet):
+    serializer_class = IssueSerializer
+    permission_classes = [IsAuthenticated, IsAdminOrProjectContributor]
 
-        # Récupération des nouveaux contributeurs à ajouter
-        for username in serializer.validated_data.get('contributors', []):
-            try:
-                user = User.objects.get(username=username)
-                serializer.save(user=user)
-            except User.DoesNotExist:
-                invalid_users.append(username)
+    def get_queryset(self):
+        project_pk = self.kwargs['project_pk']
+        # Si admin, toutes les issues, sinon vérifier
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            return Issue.objects.filter(project_id=project_pk)
 
-        if invalid_users:
+        return Issue.objects.filter(
+            project_id=project_pk,
+            project__contributor__user=self.request.user
+        )
+
+    def perform_create(self, serializer):
+        project = get_object_or_404(Project, pk=self.kwargs['project_pk'])
+        serializer.save(
+            project=project,
+            author_user=self.request.user
+        )
+
+    def update(self, request, *args, **kwargs):
+        # Seul l'auteur de l'issue ou l'admin peut modifier
+        instance = self.get_object()
+        if not (request.user.is_staff or request.user.is_superuser or instance.author_user == request.user):
             return Response(
-                {"warning": f"Les utilisateurs suivants n'existent pas : {', '.join(invalid_users)}"},
-                status=status.HTTP_200_OK
+                {"detail": "Vous n'êtes pas autorisé à modifier cette issue."},
+                status=status.HTTP_403_FORBIDDEN
             )
-        else:
-            serializer.save()
+        return super().update(request, *args, **kwargs)
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    serializer_class = CommentSerializer
+    permission_classes = [IsAuthenticated, IsAdminOrProjectContributor]
+
+    def get_queryset(self):
+        project_pk = self.kwargs['project_pk']
+        issue_pk = self.kwargs['issue_pk']
+
+        # Si admin, tous les commentaires, sinon vérifier
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            return Comment.objects.filter(
+                issue__project_id=project_pk, 
+                issue_id=issue_pk
+            )
+
+        return Comment.objects.filter(
+            issue__project_id=project_pk,
+            issue_id=issue_pk,
+            issue__project__contributor__user=self.request.user
+        )
+
+    def perform_create(self, serializer):
+        issue = get_object_or_404(
+            Issue, 
+            pk=self.kwargs['issue_pk'], 
+            project_id=self.kwargs['project_pk']
+        )
+        serializer.save(
+            issue=issue,
+            author_user=self.request.user
+        )
+
+    def update(self, request, *args, **kwargs):
+        # Seul l'auteur du commentaire ou l'admin peut modifier
+        instance = self.get_object()
+        if not (request.user.is_staff or request.user.is_superuser or instance.author_user == request.user):
+            return Response(
+                {"detail": "Vous n'êtes pas autorisé à modifier ce commentaire."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        return super().update(request, *args, **kwargs)

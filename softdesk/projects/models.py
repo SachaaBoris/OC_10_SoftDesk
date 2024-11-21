@@ -44,14 +44,23 @@ class Contributor(models.Model):
         ("Contributeur", "Contributeur"),
     ]
 
+    ROLE_CHOICES = [
+        ("Auteur", "Auteur"),
+        ("Contributeur", "Contributeur"),
+    ]
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     permission = models.CharField(
         max_length=12,
         choices=PERMISSION_CHOICES,
+        help_text="Permissions du contributeur."
     )
+    
     role = models.CharField(
-        max_length=128, blank=True, help_text="Rôle du contributeur."
+        max_length=12,
+        choices=ROLE_CHOICES,
+        help_text="Rôle du contributeur."
     )
 
     class Meta:
@@ -64,3 +73,86 @@ class Contributor(models.Model):
     def __str__(self):
         """String for representing the Model object."""
         return f"user: {self.user}, project: {self.project}"
+
+class Issue(models.Model):
+    """Issue model."""
+
+    ISSUE_TAG = [
+        ("BUG", "BUG"),
+        ("AMÉLIORATION", "AMÉLIORATION"),
+        ("TÂCHE", "TÂCHE"),
+    ]
+    ISSUE_PRIORITY = [
+        ("FAIBLE", "FAIBLE"),
+        ("MOYENNE", "MOYENNE"),
+        ("ÉLEVÉE", "ÉLEVÉE"),
+    ]
+    ISSUE_STATUS = [
+        ("À FAIRE", "À FAIRE"),
+        ("EN COURS", "EN COURS"),
+        ("TERMINÉ", "TERMINÉ"),
+    ]
+
+    title = models.CharField(max_length=128, help_text="Titre du problème.")
+    description = models.CharField(
+        max_length=2048, help_text="Description du problème."
+    )
+    tag = models.CharField(
+        max_length=12,
+        choices=ISSUE_TAG,
+        help_text="Balise du problème (BUG, AMÉLIORATION ou TÂCHE).",
+    )
+    priority = models.CharField(
+        max_length=7,
+        choices=ISSUE_PRIORITY,
+        help_text="Priorité du problème (FAIBLE, MOYENNE ou ÉLEVÉE).",
+    )
+    status = models.CharField(
+        max_length=8,
+        choices=ISSUE_STATUS,
+        help_text="Statut du problème (À faire, En cours ou Terminé).",
+    )
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    author_user = models.ForeignKey(
+        User,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="Issue_author_user",
+    )
+    assigned_user = models.ForeignKey(
+        User,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="Issue_assigned_user",
+    )
+    created_time = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_time"]
+
+    def __str__(self):
+        """String for representing the Model object."""
+        return f"issue: {self.id}, {self.title}; project: {self.project}"
+
+
+class Comment(models.Model):
+    """Comment model."""
+
+    description = models.CharField(
+        max_length=2048, help_text="Corps du commentaire."
+    )
+    author_user = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
+    issue = models.ForeignKey(Issue, on_delete=models.CASCADE)
+    created_time = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_time"]
+
+    def __str__(self):
+        """String for representing the Model object."""
+        return f"comment: {self.id}; issue: {self.issue}"
+
+    @property
+    def comment_id(self):
+        """Return pk attribut of the object."""
+        return self.pk
