@@ -82,7 +82,7 @@ class IsAdminOrProjectContributor(permissions.BasePermission):
     """
     def has_permission(self, request, view):
         # Admin a tous les droits
-        if request.user.is_staff or request.user.is_superuser:
+        if request.user.is_superuser:
             return True
         
         # Pour les vues sur projet, vérifier si contributeur
@@ -96,7 +96,7 @@ class IsAdminOrProjectContributor(permissions.BasePermission):
 
     def has_object_permission(self, request, view, obj):
         # Admin a tous les droits
-        if request.user.is_staff or request.user.is_superuser:
+        if request.user.is_superuser:
             return True
         
         # Obtenir le projet (soit directement, soit via l'issue ou le commentaire)
