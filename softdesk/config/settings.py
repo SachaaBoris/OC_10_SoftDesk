@@ -153,3 +153,10 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=999999),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
 }
+
+
+# AVANT MISE EN PROD, NE PAS OUBLIER DE VERIFIER LES VARIABLES SUIVANTES :
+# config.py : SECRET_KEY
+# config.py : DEBUG
+# config.py : SIMPLE_JWT ACCESS & REFRESH TOKEN LIFETIME
+# pagination.py : page_size
