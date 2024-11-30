@@ -119,3 +119,41 @@ urlpatterns = [
 # GET    /softdesk_api/projects/{project_id}/issues/{issue_id}/comments/{comment_id}/   # Détails d'un commentaire
 # PUT    /softdesk_api/projects/{project_id}/issues/{issue_id}/comments/{comment_id}/   # Modifier un commentaire
 # DELETE /softdesk_api/projects/{project_id}/issues/{issue_id}/comments/{comment_id}/   # Supprimer un commentaire
+
+
+### API Permissions :
+#
+### Users
+# GET     #authenticated user > liste tous les users
+# POST    #not authenticated + formulaire valide > crée un user
+# GET     #user_id == authenticated user ou admin > donne les infos d'un user
+# PUT     #user_id == authenticated user ou admin > update les infos d'un user
+# DELETE  #user_id == authenticated user ou admin > delete un user
+#
+### Projets
+# GET     #authenticated contrib ou admin > liste tous les projets pour l'admin, contributed projects pour les users
+# POST    #authenticated user > crée un projet et des contributeurs
+# GET     #authenticated contrib ou admin
+# PUT     #authenticated project_author ou admin
+# DELETE  #authenticated project_author ou admin
+#
+### Contributeurs
+# GET     #authenticated contributor ou admin > liste les contributeurs d'un projet
+# POST    #authenticated project_author ou admin > ajoute un ou plusieurs contributeurs
+# GET     #authenticated contributor ou admin > get contributor info si user "can_data_be_shared" est true
+# PUT     #authenticated project_author ou admin > update la liste des contributors
+# DELETE  #authenticated project_author ou admin > delete un ou plusieurs contributors
+#
+### Issues
+# GET     #authenticated contributor ou admin > liste les issues d'un projet
+# POST    #authenticated contributor ou admin > crée une issue associé à un projet
+# GET     #authenticated contributor ou admin > donne les infos d'une issue
+# PUT     #authenticated issue_author ou admin > update les infos d'une issue
+# DELETE  #authenticated issue_author ou admin > delete une issue
+#
+### Commentaires
+# GET     #authenticated contributor ou admin > liste les issues d'un projet
+# POST    #authenticated contributor ou admin > crée un comment
+# GET     #authenticated contributor ou admin > liste les comments d'une issue
+# PUT     #authenticated comment_author ou admin > update le comment
+# DELETE  #authenticated comment_author ou admin > delete le comment

@@ -12,20 +12,22 @@ class ContributorSerializer(serializers.ModelSerializer):
         fields = ['id', 'user', 'permission', 'role']
         read_only_fields = ['project']
 
-
-class ProjectListSerializer(serializers.ModelSerializer):
-    """Project object serializer."""
-    contributors = serializers.ListField(
-        child=serializers.CharField(),
-        required=False,
-        write_only=True
-    )
-    contributors_details = ContributorSerializer(source='contributor_set', many=True, read_only=True)
-
+class ProjectSerializer(serializers.ModelSerializer):
+    contributors = ContributorSerializer(source='contributor_set', many=True, read_only=True)
+    
     class Meta:
         model = Project
-        fields = ['id', 'title', 'description', 'type', 'author_user', 'contributors', 'contributors_details']
-        read_only_fields = ['author_user']
+        fields = ['id', 'title', 'description', 'type', 'author_user', 'created_at', 'contributors']
+        read_only_fields = ['author_user', 'created_at']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Par défaut, masquer certains champs
+        if self.context.get('view_action') == 'list':
+            # Limiter les champs pour la liste
+            self.fields.pop('description', None)
+            self.fields.pop('created_at', None)
+            self.fields.pop('contributors', None)
 
     def create(self, validated_data):
         try:
@@ -68,15 +70,6 @@ class ProjectListSerializer(serializers.ModelSerializer):
         except Exception as e:
             print(f"Erreur lors de la création du projet: {e}")
             raise serializers.ValidationError(f"Erreur lors de la création du projet: {str(e)}")
-
-
-class ProjectDetailSerializer(serializers.ModelSerializer):
-    contributors = ContributorSerializer(source='contributor_set', many=True, read_only=True)
-
-    class Meta:
-        model = Project
-        fields = ['id', 'title', 'description', 'type', 'author_user', 'created_at', 'contributors']
-        read_only_fields = ['author_user', 'created_at']
 
 
 class IssueSerializer(serializers.ModelSerializer):

@@ -3,17 +3,25 @@ Users views
 """
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from .models import User
 from .serializers import UserDetailSerializer, UserCreateSerializer, UserListSerializer
-from .permissions import IsAdminOrSelf
+from .permissions import IsAdminOrSelf, IsAdminOrUnauthenticated
+from config.pagination import UserPagination
+
 
 class UserViewSet(viewsets.ModelViewSet):
     """
     ViewSet pour gérer les opérations CRUD sur les utilisateurs.
     """
-    permission_classes = [IsAuthenticated, IsAdminOrSelf]
+    pagination_class = UserPagination
+    
+    def get_permissions(self):
+        if self.action == 'create':
+            # Accès public pour la création de compte
+            return [IsAdminOrUnauthenticated()]
+        return [IsAuthenticated(), IsAdminOrSelf()]
     
     def get_serializer_class(self):
         if self.action == 'create':
@@ -23,21 +31,7 @@ class UserViewSet(viewsets.ModelViewSet):
         return UserDetailSerializer
 
     def get_queryset(self):
-        user = self.request.user
-        # Si admin, tous les utilisateurs
-        if user.is_staff or user.is_superuser:
-            return User.objects.all()
-        # Sinon, uniquement l'utilisateur lui-même
-        return User.objects.filter(pk=user.pk)
-
-    def list(self, request, *args, **kwargs):
-        # Seuls les admins peuvent lister tous les utilisateurs
-        if not request.user.is_staff and not request.user.is_superuser:
-            return Response(
-                {"detail": "Vous n'avez pas la permission de lister les utilisateurs."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        return super().list(request, *args, **kwargs)
+        return User.objects.all()
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -79,7 +73,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'])
     def profile(self, request, pk=None):
-        """Endpoint supplémentaire pour voir son profil"""
+        """Endpoint supplémentaire pour voir le profil"""
         user = self.get_object()
         if not user.can_data_be_shared and not (request.user.is_staff or request.user == user):
             return Response(

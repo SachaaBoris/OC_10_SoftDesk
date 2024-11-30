@@ -2,6 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import BaseUserManager
+from datetime import date, timedelta
 
 
 class UserManager(BaseUserManager):
@@ -9,13 +10,13 @@ class UserManager(BaseUserManager):
 
     use_in_migrations = True
 
-    def create_user(self, email, username, age, password, **extra_fields):
-        """Create and save a User with the given email, username, age, and password."""
+    def create_user(self, email, username, dob, password, **extra_fields):
+        """Create and save a User with the given email, username, dob, and password."""
         email = self.normalize_email(email)
         user = self.model(
             email=email, 
             username=username, 
-            age=age, 
+            dob=dob, 
             can_be_contacted=extra_fields.pop('can_be_contacted', False),
             can_data_be_shared=extra_fields.pop('can_data_be_shared', False),
             **extra_fields
@@ -24,31 +25,13 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def create_user(self, email, username, age, password=None, **extra_fields):
-        """Create and save User with the given email, username, and age."""
-        extra_fields.setdefault("is_staff", False)
-        extra_fields.setdefault("is_superuser", False)
-        return self._create_user(email, username, age, password, **extra_fields)
-
-    def create_superuser(self, email, username, age, password, **extra_fields):
-        """Create and save a SuperUser with the given email, username, and age."""
-        extra_fields.setdefault("is_staff", True)
-        extra_fields.setdefault("is_superuser", True)
-
-        if extra_fields.get("is_staff") is not True:
-            raise ValueError("Superuser must have is_staff=True.")
-        if extra_fields.get("is_superuser") is not True:
-            raise ValueError("Superuser must have is_superuser=True.")
-
-        return self._create_user(email, username, age, password, **extra_fields)
-
 
 class User(AbstractUser):
     """User model without first_name & last_name."""
 
     username = models.CharField(max_length=32, unique=True)
     email = models.EmailField(_("email address"), unique=True)
-    age = models.PositiveIntegerField()
+    dob = models.DateField(help_text="Date de naissance de l'utilisateur (YYYY-MM-DD)")
     can_be_contacted = models.BooleanField(default=True)
     can_data_be_shared = models.BooleanField(default=True)
 
@@ -57,9 +40,15 @@ class User(AbstractUser):
     last_name = None
 
     USERNAME_FIELD = "username"
-    REQUIRED_FIELDS = ["email", "age"]
+    REQUIRED_FIELDS = ["email", "dob"]
 
     objects = UserManager()
+
+    def calculate_age(self):
+        """Calcule l'âge de l'utilisateur à partir de la date de naissance."""
+        today = date.today()
+        age = today.year - self.dob.year - ((today.month, today.day) < (self.dob.month, self.dob.day))
+        return age
 
     class Meta:
         ordering = ["email"]

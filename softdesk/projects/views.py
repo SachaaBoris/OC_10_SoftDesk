@@ -6,8 +6,7 @@ from django.shortcuts import get_object_or_404
 
 from .models import Project, Contributor, Issue, Comment
 from .serializers import (
-    ProjectListSerializer,
-    ProjectDetailSerializer,
+    ProjectSerializer,
     ContributorSerializer,
     IssueSerializer,
     CommentSerializer
@@ -17,10 +16,23 @@ from .permissions import (
     IsAdminOrProjectContributor, 
     IsProjectAuthor
 )
+from config.pagination import (
+    UserPagination,
+    ProjectPagination,
+    IssuePagination,
+    CommentPagination
+)
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
-    serializer_class = ProjectListSerializer
+    serializer_class = ProjectSerializer
+    pagination_class = ProjectPagination
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        # Ajoute l'action (list ou retrieve) dans le contexte
+        context['view_action'] = self.action
+        return context
     
     def get_permission_classes(self):
         """
@@ -45,6 +57,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
 class ContributorViewSet(viewsets.ModelViewSet):
     serializer_class = ContributorSerializer
     permission_classes = [IsAuthenticated, IsAdminOrProjectContributor]
+    pagination_class = UserPagination
 
     def get_queryset(self):
         project_pk = self.kwargs['project_pk']
@@ -66,6 +79,7 @@ class ContributorViewSet(viewsets.ModelViewSet):
 class IssueViewSet(viewsets.ModelViewSet):
     serializer_class = IssueSerializer
     permission_classes = [IsAuthenticated, IsAdminOrProjectContributor]
+    pagination_class = IssuePagination
 
     def get_queryset(self):
         project_pk = self.kwargs['project_pk']
@@ -99,6 +113,7 @@ class IssueViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = [IsAuthenticated, IsAdminOrProjectContributor]
+    pagination_class = CommentPagination
 
     def get_queryset(self):
         project_pk = self.kwargs['project_pk']
