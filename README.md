@@ -183,15 +183,10 @@ PUT {{base_url}}/softdesk_api/users/#/
 > 
 > ```
 > {
-
 >   "email": "user@example.com",
-
 >   "username": "users_name",
-
 >   "password": "@123456789",
-
 >   "dob": "1984-11-22"
-
 > }
 > ```
 > 
@@ -227,15 +222,10 @@ POST {{base_url}}/softdesk_api/projects/
 > 
 > ```
 > {
-
 >   "title": "Project title",
-
 >   "description": "Project description.",
-
 >   "type": "Front-End",
-
 >   "contributors": ["username1","username2"]
-
 > }
 > ```
 > 
@@ -291,9 +281,7 @@ POST {{base_url}}/softdesk_api/projects/#/contributors/
 > 
 > ```
 > {
-
 >   "contributors": ["username1", "username2"]
-
 > }
 > ```
 > 
@@ -337,19 +325,12 @@ POST {{base_url}}/softdesk_api/projects/#/issues/
 > 
 > ```
 > {
-
 >   "title": "Issue title",
-
 >   "description": "Issue description",
-
 >   "tag": "BUG",
-
 >   "priority": "ÉLEVÉE",
-
 >   "status": "EN COURS",
-
 >   "assigned_user": #
-
 > }
 > ```
 > 
@@ -405,9 +386,7 @@ POST {{base_url}}/softdesk_api/projects/#/issues/#/comments/
 > 
 > ```
 > {
-
 >   "description": "Users comment."
-
 > }
 > ```
 > 
