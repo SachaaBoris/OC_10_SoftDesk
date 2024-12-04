@@ -140,7 +140,7 @@ urlpatterns = [
 # GET     #authenticated contributor ou admin > liste les contributeurs d'un projet
 # POST    #authenticated project_author ou admin > ajoute un ou plusieurs contributeurs
 # GET     #authenticated contributor ou admin > get contributor info si user "can_be_contacted" est true
-# DELETE  #authenticated project_author ou admin > delete un ou plusieurs contributors
+# DELETE  #authenticated project_author ou admin > delete un ou plusieurs contributeurs
 #
 ### Issues
 # GET     #authenticated contributor ou admin > liste les issues d'un projet
