@@ -56,82 +56,130 @@ SoftDesk Support est un outil de suivi de projet / gestion des problèmes techni
 # ● Documentation de l'API :scroll:  
   
   
-# API Endpoints :  
+# API Endpoints  
   
-# Authentication  
-POST   /softdesk_api/login/                                                           # Obtenir un token JWT  
-POST   /softdesk_api/login/refresh/                                                   # Rafraîchir un token JWT  
+---
   
-# Users  
-GET    /softdesk_api/users/                                                           # Liste des utilisateurs (admin uniquement)  
-POST   /softdesk_api/users/                                                           # Créer un utilisateur  
-GET    /softdesk_api/users/{user_id}/                                                 # Détails d'un utilisateur  
-PUT    /softdesk_api/users/{user_id}/                                                 # Modifier un utilisateur  
-DELETE /softdesk_api/users/{user_id}/                                                 # Supprimer un utilisateur  
-  
-# Projects  
-GET    /softdesk_api/projects/                                                        # Liste des projets  
-POST   /softdesk_api/projects/                                                        # Créer un projet  
-GET    /softdesk_api/projects/{project_id}/                                           # Détails d'un projet  
-PUT    /softdesk_api/projects/{project_id}/                                           # Modifier un projet  
-DELETE /softdesk_api/projects/{project_id}/                                           # Supprimer un projet  
-  
-# Contributors  
-GET    /softdesk_api/projects/{project_id}/contributors/                              # Liste des contributeurs  
-POST   /softdesk_api/projects/{project_id}/contributors/                              # Ajouter un contributeur  
-GET    /softdesk_api/projects/{project_id}/contributors/{contributor_id}/             # Détails d'un contributeur  
-DELETE /softdesk_api/projects/{project_id}/contributors/{contributor_id}/             # Supprimer un contributeur  
-  
-# Issues  
-GET    /softdesk_api/projects/{project_id}/issues/                                    # Liste des issues  
-POST   /softdesk_api/projects/{project_id}/issues/                                    # Créer une issue  
-GET    /softdesk_api/projects/{project_id}/issues/{issue_id}/                         # Détails d'une issue  
-PUT    /softdesk_api/projects/{project_id}/issues/{issue_id}/                         # Modifier une issue  
-DELETE /softdesk_api/projects/{project_id}/issues/{issue_id}/                         # Supprimer une issue  
-  
-# Comments  
-GET    /softdesk_api/projects/{project_id}/issues/{issue_id}/comments/                # Liste des commentaires  
-POST   /softdesk_api/projects/{project_id}/issues/{issue_id}/comments/                # Créer un commentaire  
-GET    /softdesk_api/projects/{project_id}/issues/{issue_id}/comments/{comment_id}/   # Détails d'un commentaire  
-PUT    /softdesk_api/projects/{project_id}/issues/{issue_id}/comments/{comment_id}/   # Modifier un commentaire  
-DELETE /softdesk_api/projects/{project_id}/issues/{issue_id}/comments/{comment_id}/   # Supprimer un commentaire  
+### Authentication
+| Méthode | Endpoint                                  | Description                      |
+|---------|-------------------------------------------|----------------------------------|
+| POST    | /softdesk_api/login/                     | Obtenir un token JWT            |
+| POST    | /softdesk_api/login/refresh/             | Rafraîchir un token JWT         |
+
+---
+
+### Users
+| Méthode | Endpoint                                  | Description                      |
+|---------|-------------------------------------------|----------------------------------|
+| GET     | /softdesk_api/users/                     | Liste des utilisateurs (admin uniquement) |
+| POST    | /softdesk_api/users/                     | Créer un utilisateur            |
+| GET     | /softdesk_api/users/{user_id}/           | Détails d'un utilisateur        |
+| PUT     | /softdesk_api/users/{user_id}/           | Modifier un utilisateur         |
+| DELETE  | /softdesk_api/users/{user_id}/           | Supprimer un utilisateur        |
+
+---
+
+### Projects
+| Méthode | Endpoint                                  | Description                      |
+|---------|-------------------------------------------|----------------------------------|
+| GET     | /softdesk_api/projects/                  | Liste des projets               |
+| POST    | /softdesk_api/projects/                  | Créer un projet                 |
+| GET     | /softdesk_api/projects/{project_id}/     | Détails d'un projet             |
+| PUT     | /softdesk_api/projects/{project_id}/     | Modifier un projet              |
+| DELETE  | /softdesk_api/projects/{project_id}/     | Supprimer un projet             |
+
+---
+
+### Contributors
+| Méthode | Endpoint                                  | Description                      |
+|---------|-------------------------------------------|----------------------------------|
+| GET     | /softdesk_api/projects/{project_id}/contributors/      | Liste des contributeurs         |
+| POST    | /softdesk_api/projects/{project_id}/contributors/      | Ajouter un contributeur         |
+| GET     | /softdesk_api/projects/{project_id}/contributors/{contributor_id}/ | Détails d'un contributeur       |
+| DELETE  | /softdesk_api/projects/{project_id}/contributors/{contributor_id}/ | Supprimer un contributeur       |
+
+---
+
+### Issues
+| Méthode | Endpoint                                  | Description                      |
+|---------|-------------------------------------------|----------------------------------|
+| GET     | /softdesk_api/projects/{project_id}/issues/           | Liste des issues                |
+| POST    | /softdesk_api/projects/{project_id}/issues/           | Créer une issue                 |
+| GET     | /softdesk_api/projects/{project_id}/issues/{issue_id}/| Détails d'une issue             |
+| PUT     | /softdesk_api/projects/{project_id}/issues/{issue_id}/| Modifier une issue              |
+| DELETE  | /softdesk_api/projects/{project_id}/issues/{issue_id}/| Supprimer une issue             |
+
+---
+
+### Comments
+| Méthode | Endpoint                                  | Description                      |
+|---------|-------------------------------------------|----------------------------------|
+| GET     | /softdesk_api/projects/{project_id}/issues/{issue_id}/comments/               | Liste des commentaires          |
+| POST    | /softdesk_api/projects/{project_id}/issues/{issue_id}/comments/               | Créer un commentaire            |
+| GET     | /softdesk_api/projects/{project_id}/issues/{issue_id}/comments/{comment_id}/  | Détails d'un commentaire        |
+| PUT     | /softdesk_api/projects/{project_id}/issues/{issue_id}/comments/{comment_id}/  | Modifier un commentaire         |
+| DELETE  | /softdesk_api/projects/{project_id}/issues/{issue_id}/comments/{comment_id}/  | Supprimer un commentaire        |
+
+---
   
   
 # API Permissions :  
   
-# Users  
-GET     #authenticated user > liste tous les users  
-POST    #not authenticated + formulaire valide > crée un user  
-GET     #user_id == authenticated user ou admin > donne les infos d'un user  
-PUT     #user_id == authenticated user ou admin > update les infos d'un user  
-DELETE  #user_id == authenticated user ou admin > delete un user  
-  
-# Projets  
-GET     #authenticated contrib ou admin > liste tous les projets pour l'admin, contributed projects pour les users  
-POST    #authenticated user > crée un projet et des contributeurs  
-GET     #authenticated contrib ou admin  
-PUT     #authenticated project_author ou admin  
-DELETE  #authenticated project_author ou admin  
-  
-# Contributeurs  
-GET     #authenticated contributor ou admin > liste les contributeurs d'un projet  
-POST    #authenticated project_author ou admin > ajoute un ou plusieurs contributeurs  
-GET     #authenticated contributor ou admin > get contributor info si user "can_be_contacted" est true  
-DELETE  #authenticated project_author ou admin > delete un ou plusieurs contributeurs  
-  
-# Issues  
-GET     #authenticated contributor ou admin > liste les issues d'un projet  
-POST    #authenticated contributor ou admin > crée une issue associé à un projet  
-GET     #authenticated contributor ou admin > donne les infos d'une issue  
-PUT     #authenticated issue_author ou admin > update les infos d'une issue  
-DELETE  #authenticated issue_author ou admin > delete une issue  
-  
-# Commentaires  
-GET     #authenticated contributor ou admin > liste les issues d'un projet  
-POST    #authenticated contributor ou admin > crée un comment  
-GET     #authenticated contributor ou admin > liste les comments d'une issue  
-PUT     #authenticated comment_author ou admin > update le comment  
-DELETE  #authenticated comment_author ou admin > delete le comment  
+---
+
+### Users
+| Méthode | Condition                                                   | Description                                      |
+|---------|-------------------------------------------------------------|--------------------------------------------------|
+| GET     | Authenticated user                                          | Liste tous les utilisateurs                     |
+| POST    | Not authenticated + formulaire valide                       | Crée un utilisateur                             |
+| GET     | user_id == authenticated user ou admin                      | Donne les infos d'un utilisateur                |
+| PUT     | user_id == authenticated user ou admin                      | Met à jour les infos d'un utilisateur           |
+| DELETE  | user_id == authenticated user ou admin                      | Supprime un utilisateur                         |
+
+---
+
+### Projets
+| Méthode | Condition                                                   | Description                                      |
+|---------|-------------------------------------------------------------|--------------------------------------------------|
+| GET     | Authenticated contrib ou admin                              | Liste tous les projets pour l'admin, contributed projects pour les users |
+| POST    | Authenticated user                                          | Crée un projet et des contributeurs             |
+| GET     | Authenticated contrib ou admin                              | Détails d'un projet                             |
+| PUT     | Authenticated project_author ou admin                       | Met à jour les infos d'un projet                |
+| DELETE  | Authenticated project_author ou admin                       | Supprime un projet                              |
+
+---
+
+### Contributeurs
+| Méthode | Condition                                                   | Description                                      |
+|---------|-------------------------------------------------------------|--------------------------------------------------|
+| GET     | Authenticated contributor ou admin                          | Liste les contributeurs d'un projet             |
+| POST    | Authenticated project_author ou admin                       | Ajoute un ou plusieurs contributeurs            |
+| GET     | Authenticated contributor ou admin + user can_be_contacted  | Donne les infos d'un contributeur               |
+| DELETE  | Authenticated project_author ou admin                       | Supprime un ou plusieurs contributeurs          |
+
+---
+
+### Issues
+| Méthode | Condition                                                   | Description                                      |
+|---------|-------------------------------------------------------------|--------------------------------------------------|
+| GET     | Authenticated contributor ou admin                          | Liste les issues d'un projet                    |
+| POST    | Authenticated contributor ou admin                          | Crée une issue associée à un projet             |
+| GET     | Authenticated contributor ou admin                          | Donne les infos d'une issue                     |
+| PUT     | Authenticated issue_author ou admin                         | Met à jour les infos d'une issue                |
+| DELETE  | Authenticated issue_author ou admin                         | Supprime une issue                              |
+
+---
+
+### Commentaires
+| Méthode | Condition                                                   | Description                                      |
+|---------|-------------------------------------------------------------|--------------------------------------------------|
+| GET     | Authenticated contributor ou admin                          | Liste les issues d'un projet                    |
+| POST    | Authenticated contributor ou admin                          | Crée un commentaire                             |
+| GET     | Authenticated contributor ou admin                          | Liste les commentaires d'une issue              |
+| PUT     | Authenticated comment_author ou admin                       | Met à jour un commentaire                       |
+| DELETE  | Authenticated comment_author ou admin                       | Supprime un commentaire                         |
+
+---
   
   
 ## Obtain Admin token
