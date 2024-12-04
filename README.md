@@ -34,7 +34,6 @@ SoftDesk Support est un outil de suivi de projet / gestion des problèmes techni
 # ● Etapes supplémentaires facultatives  
 5. Démarrer une nouvelle BDD :  
 	Quittez le serveur (CTRL+C dans la console) si vous l'avez lancé et supprimez le fichier db.sqlite3  
-	Vous pouvez également supprimer les images des anciens tickets du dossier media/tickets
 	Et rentrer les commandes suivantes pour créer une nouvelle BDD
   ``` 
   py softdesk/manage.py makemigrations
@@ -47,13 +46,14 @@ SoftDesk Support est un outil de suivi de projet / gestion des problèmes techni
 	py softdesk/manage.py createsuperuser
   ```  
   
-7. Noubliez pas de switcher ces variables dans les settings du projet avant mise en production :  
-	DEBUG = False  
+7. Noubliez pas de switcher ces valeurs avant mise en production :  
+	dans les settings du projet, DEBUG = False & ajustez SIMPLE_JWT token lifetime  
+	vous pouvez également éditer pagination.py : page_size  
 	
   
 :black_circle:  
 
-# ● Documentation de l'API 
+# ● Documentation de l'API :scroll:  
 
 ## Obtain Admin token
 
