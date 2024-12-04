@@ -54,7 +54,7 @@ class ContributorInline(admin.TabularInline):
 
 
 class ContributorAdmin(admin.ModelAdmin):
-    list_display = ['id','project', 'user', 'role', 'permission']  # Liste des champs visibles
+    list_display = ['id','project', 'user']  # Liste des champs visibles
     ordering = ("id",)
 
     def get_readonly_fields(self, request, obj=None):
@@ -85,16 +85,16 @@ class ProjectAdmin(admin.ModelAdmin):
 
 class IssueAdmin(admin.ModelAdmin):
     """Admin view for Issue."""
-    list_display = ('id', 'title', 'description', 'tag', 'priority', 'status', 'project', 'author_user', 'assigned_user', 'created_time')
-    fields = ('title', 'description', 'tag', 'priority', 'status', 'project', 'author_user', 'assigned_user', 'created_time')
-    readonly_fields = ('created_time',)
+    list_display = ('id', 'title', 'description', 'tag', 'priority', 'status', 'project', 'author_user', 'assigned_user', 'created_at')
+    fields = ('title', 'description', 'tag', 'priority', 'status', 'project', 'author_user', 'assigned_user', 'created_at')
+    readonly_fields = ('created_at',)
 
 
 class CommentAdmin(admin.ModelAdmin):
     """Admin view for the Comment model."""
-    list_display = ('id', 'description', 'issue', 'author_user', 'created_time')
-    fields = ('description', 'issue', 'author_user', 'created_time')
-    readonly_fields = ('created_time',)
+    list_display = ('id', 'description', 'issue', 'author_user', 'created_at')
+    fields = ('description', 'issue', 'author_user', 'created_at')
+    readonly_fields = ('created_at',)
 
 
 # Register your models here.

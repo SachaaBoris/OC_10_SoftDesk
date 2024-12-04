@@ -1,4 +1,4 @@
-# OC_10 SoftDesk Support (WIP)  
+# OC_10 SoftDesk Support 
 
 <p align="center"><img src="https://github.com/SachaaBoris/OC_10_SoftDesk/blob/main/softdesk_logo.png" width="300"/></p>
   
@@ -30,43 +30,7 @@ SoftDesk Support est un outil de suivi de projet / gestion des problèmes techni
 	http://127.0.0.1:8000 ou http://localhost:8000/  
   
 :black_circle:  
-  
-Vous pouvez désormais créer un compte et utiliser l'application.  
-  
-Sept comptes demo sont fournis :  
-| UserID | Password |
-| :---: | :---: |
-| Toto | igotapass24 |
-| Michel56 | igotapass23 |
-| Starlette | igotapass22 |
-| Darkdev | igotapass21 |
-| Maïté | igotapass20 |
-| Sarma | igotapass19 |
-| Administrator | 123456789 |
-  
-:black_circle:  
-  
-Par defaut, ces comptes sont abonnés a et peuvent voir les publications de :  
-|   | Toto | Michel56 | Starlette | Darkdev | Maïté | Sarma | Administrator |
-| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| Toto | X |  |  |  |  | X |  |
-| Michel56 | X | X | X | X | X | X |  |
-| Starlette | X | X | X |  |  | X |  |
-| Darkdev | X | X | X | X |  | X |  |
-| Maïté |  |  | X |  | X | X |  |
-| Sarma |  |  |  |  |  | X |  |
-| Administrator | X | X | X | X | X | X | X |  
-  
-:black_circle:  
-  
-Permissions par défaut :  
-| User | Can follow / unfollow other users | Can Post Reviews and Tickets | Can update own posts | Can delete own posts | Can delete others posts | Can delete Users |
-| :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| CustomUser | X | X | X | X |  |  |
-| Administrator |  |  |  |  | X | X |  
-  
-:black_circle:  
-  
+
 # ● Etapes supplémentaires facultatives  
 5. Démarrer une nouvelle BDD :  
 	Quittez le serveur (CTRL+C dans la console) si vous l'avez lancé et supprimez le fichier db.sqlite3  
@@ -85,11 +49,396 @@ Permissions par défaut :
   
 7. Noubliez pas de switcher ces variables dans les settings du projet avant mise en production :  
 	DEBUG = False  
-	CSRF_COOKIE_SECURE = True  
-	SESSION_COOKIE_SECURE = True  
+	
   
 :black_circle:  
-  
+
+# ● Documentation de l'API 
+
+## Obtain Admin token
+
+```
+POST {{base_url}}/softdesk_api/login/
+```
+
+This is a POST request, submitting data to an API via the request body. This request submits JSON data, and the data is reflected in the response.
+
+A successful POST request typically returns a `200 OK` or `201 Created` response code.
+
+### Request
+
+> 
+> **Body**
+> 
+> ```
+> {
+>   "username": "user",
+>   "password": "@123456789"
+> }
+> ```
+> 
+
+## Obtain User token
+
+```
+POST {{base_url}}/softdesk_api/login/
+```
+
+This is a POST request, submitting data to an API via the request body. This request submits JSON data, and the data is reflected in the response.
+
+A successful POST request typically returns a `200 OK` or `201 Created` response code.
+
+### Request
+
+> 
+> **Body**
+> 
+> ```
+> {
+>   "username": "user",
+>   "password": "@123456789"
+> }
+> ```
+> 
+
+## Refresh Token
+
+```
+POST {{base_url}}/softdesk_api/login/refresh/
+```
+
+This is a POST request, submitting data to an API via the request body. This request submits JSON data, and the data is reflected in the response.
+
+A successful POST request typically returns a `200 OK` or `201 Created` response code.
+
+### Request
+
+> 
+> **Body**
+> 
+> ```
+> {
+>   "username": "user",
+>   "password": "@123456789"
+> }
+> ```
+> 
+
+## User list
+
+```
+GET {{base_url}}/softdesk_api/users/
+```
+
+
+
+## User
+
+```
+POST {{base_url}}/softdesk_api/users/
+```
+
+This is a POST request, submitting data to an API via the request body. This request submits JSON data, and the data is reflected in the response.
+
+A successful POST request typically returns a `200 OK` or `201 Created` response code.
+
+### Request
+
+> 
+> **Body**
+> 
+> ```
+> {
+>   "email": "user@example.com",
+>   "username": "users_name",
+>   "password": "@123456789",
+>   "password_confirm": "@123456789",
+>   "dob": "1999-10-22",
+>   "can_be_contacted": true,
+>   "can_data_be_shared": false
+> }
+> ```
+> 
+
+## User
+
+```
+GET {{base_url}}/softdesk_api/users/#/
+```
+
+
+
+## User
+
+```
+PUT {{base_url}}/softdesk_api/users/#/
+```
+
+
+
+### Request
+
+> 
+> **Body**
+> 
+> ```
+> {
+
+>   "email": "user@example.com",
+
+>   "username": "users_name",
+
+>   "password": "@123456789",
+
+>   "dob": "1984-11-22"
+
+> }
+> ```
+> 
+
+## User
+
+```
+DELETE {{base_url}}/softdesk_api/users/#/
+```
+
+
+
+## Project list
+
+```
+GET {{base_url}}/softdesk_api/projects/
+```
+
+
+
+## Project
+
+```
+POST {{base_url}}/softdesk_api/projects/
+```
+
+
+
+### Request
+
+> 
+> **Body**
+> 
+> ```
+> {
+
+>   "title": "Project title",
+
+>   "description": "Project description.",
+
+>   "type": "Front-End",
+
+>   "contributors": ["username1","username2"]
+
+> }
+> ```
+> 
+
+## Project
+
+```
+GET {{base_url}}/softdesk_api/projects/#/
+```
+
+
+
+## Project
+
+```
+PUT {{base_url}}/softdesk_api/projects/#/
+```
+
+
+
+### Request
+
+> 
+
+## Project
+
+```
+DELETE {{base_url}}/softdesk_api/projects/#/
+```
+
+
+
+## Contributors list
+
+```
+GET {{base_url}}/softdesk_api/projects/#/contributors/
+```
+
+
+
+## Contributors
+
+```
+POST {{base_url}}/softdesk_api/projects/#/contributors/
+```
+
+
+
+### Request
+
+> 
+> **Body**
+> 
+> ```
+> {
+
+>   "contributors": ["username1", "username2"]
+
+> }
+> ```
+> 
+
+## Contributor info (user info)
+
+```
+GET {{base_url}}/softdesk_api/projects/#/contributors/#/
+```
+
+
+
+## Contributors
+
+```
+DELETE {{base_url}}/softdesk_api/projects/#/contributors/#/
+```
+
+
+
+## Issue list
+
+```
+GET {{base_url}}/softdesk_api/projects/#/issues/
+```
+
+
+
+## Issue
+
+```
+POST {{base_url}}/softdesk_api/projects/#/issues/
+```
+
+
+
+### Request
+
+> 
+> **Body**
+> 
+> ```
+> {
+
+>   "title": "Issue title",
+
+>   "description": "Issue description",
+
+>   "tag": "BUG",
+
+>   "priority": "ÉLEVÉE",
+
+>   "status": "EN COURS",
+
+>   "assigned_user": #
+
+> }
+> ```
+> 
+
+## Issue
+
+```
+GET {{base_url}}/softdesk_api/projects/#/issues/#/
+```
+
+
+
+## Issue
+
+```
+PUT {{base_url}}/softdesk_api/projects/#/issues/#/
+```
+
+
+
+### Request
+
+> 
+
+## Issue
+
+```
+DELETE {{base_url}}/softdesk_api/projects/#/issues/#/
+```
+
+
+
+## Comment list
+
+```
+GET {{base_url}}/softdesk_api/projects/#/issues/#/comments/
+```
+
+
+
+## Comment
+
+```
+POST {{base_url}}/softdesk_api/projects/#/issues/#/comments/
+```
+
+
+
+### Request
+
+> 
+> **Body**
+> 
+> ```
+> {
+
+>   "description": "Users comment."
+
+> }
+> ```
+> 
+
+## Comment
+
+```
+GET {{base_url}}/softdesk_api/projects/#/issues/#/comments/#/
+```
+
+
+
+## Comment
+
+```
+PUT {{base_url}}/softdesk_api/projects/#/issues/#/comments/#/
+```
+
+
+
+### Request
+
+> 
+
+## Comment
+
+```
+DELETE {{base_url}}/softdesk_api/projects/#/issues/#/comments/#/
+```
+
+
 ---  
   
 [![CC BY 4.0][cc-by-shield]][cc-by]  

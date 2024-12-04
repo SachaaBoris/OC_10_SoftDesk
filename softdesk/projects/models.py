@@ -11,17 +11,29 @@ class Project(models.Model):
         ("Android", "Android"),
     ]
 
-    title = models.CharField(max_length=128, help_text="Titre du projet.")
+    title = models.CharField(
+        max_length=128,
+        help_text="Titre du projet."
+    )
     description = models.CharField(
-        max_length=2048, help_text="Description du projet."
+        max_length=2048,
+        help_text="Description du projet."
     )
     type = models.CharField(
         max_length=9,
         choices=PROJECT_TYPE_CHOICES,
-        help_text="Type du projet (back-end, front-end, iOS ou Android).",
+        help_text="Type du projet (back-end, front-end, iOS ou Android)."
     )
-    author_user = models.ForeignKey(User, null=True, on_delete=models.SET_NULL, related_name='projects')
-    created_at = models.DateTimeField(auto_now_add=True, help_text="Date de création du projet.")
+    author_user = models.ForeignKey(
+        User,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name='projects'
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text="Date de création du projet."
+    )
 
     class Meta:
         ordering = ["pk"]
@@ -39,29 +51,8 @@ class Project(models.Model):
 class Contributor(models.Model):
     """Contributor model."""
 
-    PERMISSION_CHOICES = [
-        ("Responsable", "Responsable"),
-        ("Contributeur", "Contributeur"),
-    ]
-
-    ROLE_CHOICES = [
-        ("Auteur", "Auteur"),
-        ("Contributeur", "Contributeur"),
-    ]
-
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
-    permission = models.CharField(
-        max_length=12,
-        choices=PERMISSION_CHOICES,
-        help_text="Permissions du contributeur."
-    )
-    
-    role = models.CharField(
-        max_length=12,
-        choices=ROLE_CHOICES,
-        help_text="Rôle du contributeur."
-    )
 
     class Meta:
         unique_together = (
@@ -73,6 +64,7 @@ class Contributor(models.Model):
     def __str__(self):
         """String for representing the Model object."""
         return f"user: {self.user}, project: {self.project}"
+
 
 class Issue(models.Model):
     """Issue model."""
@@ -93,9 +85,13 @@ class Issue(models.Model):
         ("TERMINÉ", "TERMINÉ"),
     ]
 
-    title = models.CharField(max_length=128, help_text="Titre du problème.")
+    title = models.CharField(
+        max_length=128,
+        help_text="Titre du problème."
+    )
     description = models.CharField(
-        max_length=2048, help_text="Description du problème."
+        max_length=2048,
+        help_text="Description du problème."
     )
     tag = models.CharField(
         max_length=12,
@@ -125,10 +121,10 @@ class Issue(models.Model):
         on_delete=models.SET_NULL,
         related_name="Issue_assigned_user",
     )
-    created_time = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ["-created_time"]
+        ordering = ["-created_at"]
 
     def __str__(self):
         """String for representing the Model object."""
@@ -139,14 +135,22 @@ class Comment(models.Model):
     """Comment model."""
 
     description = models.CharField(
-        max_length=2048, help_text="Corps du commentaire."
+        max_length=2048,
+        help_text="Corps du commentaire."
     )
-    author_user = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
-    issue = models.ForeignKey(Issue, on_delete=models.CASCADE)
-    created_time = models.DateTimeField(auto_now_add=True)
+    author_user = models.ForeignKey(
+        User,
+        null=True,
+        on_delete=models.SET_NULL
+    )
+    issue = models.ForeignKey(
+        Issue,
+        on_delete=models.CASCADE
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ["-created_time"]
+        ordering = ["-created_at"]
 
     def __str__(self):
         """String for representing the Model object."""

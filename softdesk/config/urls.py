@@ -103,7 +103,6 @@ urlpatterns = [
 # GET    /softdesk_api/projects/{project_id}/contributors/                              # Liste des contributeurs
 # POST   /softdesk_api/projects/{project_id}/contributors/                              # Ajouter un contributeur
 # GET    /softdesk_api/projects/{project_id}/contributors/{contributor_id}/             # Détails d'un contributeur
-# PUT    /softdesk_api/projects/{project_id}/contributors/{contributor_id}/             # Modifier un contributeur
 # DELETE /softdesk_api/projects/{project_id}/contributors/{contributor_id}/             # Supprimer un contributeur
 # 
 ### Issues
@@ -140,8 +139,7 @@ urlpatterns = [
 ### Contributeurs
 # GET     #authenticated contributor ou admin > liste les contributeurs d'un projet
 # POST    #authenticated project_author ou admin > ajoute un ou plusieurs contributeurs
-# GET     #authenticated contributor ou admin > get contributor info si user "can_data_be_shared" est true
-# PUT     #authenticated project_author ou admin > update la liste des contributors
+# GET     #authenticated contributor ou admin > get contributor info si user "can_be_contacted" est true
 # DELETE  #authenticated project_author ou admin > delete un ou plusieurs contributors
 #
 ### Issues

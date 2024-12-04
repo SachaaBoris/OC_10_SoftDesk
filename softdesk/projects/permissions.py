@@ -1,111 +1,85 @@
 """
 Custom permissions.
 """
+from rest_framework.permissions import BasePermission
 from rest_framework import permissions
 from projects.models import Contributor
 
-class IsProjectContributor(permissions.BasePermission):
-    """
-    Permission vérifiant si l'utilisateur est contributeur du projet.
-    """
-    def has_object_permission(self, request, view, obj):
-        # Obtenir le projet (soit directement, soit via l'issue ou le commentaire)
-        if hasattr(obj, 'project'):
-            project = obj.project
-        else:
-            project = obj
 
-        return Contributor.objects.filter(
-            user=request.user,
-            project=project
-        ).exists()
-
-class IsProjectAuthor(permissions.BasePermission):
+class IsAdmin(permissions.BasePermission):
     """
-    Permission vérifiant si l'utilisateur est l'auteur du projet.
-    """
-    def has_object_permission(self, request, view, obj):
-        # Obtenir le projet (soit directement, soit via l'issue ou le commentaire)
-        if hasattr(obj, 'project'):
-            project = obj.project
-        else:
-            project = obj
-            
-        return project.author_user == request.user
-
-class IsProjectContributorOrAuthor(permissions.BasePermission):
-    """
-    Permission vérifiant si l'utilisateur est soit contributeur soit auteur du projet.
-    """
-    def has_object_permission(self, request, view, obj):
-        # Obtenir le projet (soit directement, soit via l'issue ou le commentaire)
-        if hasattr(obj, 'project'):
-            project = obj.project
-        else:
-            project = obj
-
-        # Vérifier si l'utilisateur est l'auteur
-        is_author = project.author_user == request.user
-        
-        # Vérifier si l'utilisateur est contributeur
-        is_contributor = Contributor.objects.filter(
-            user=request.user,
-            project=project
-        ).exists()
-
-        return is_author or is_contributor
-
-
-class IsAdminOrOwner(permissions.BasePermission):
-    """
-    Permission vérifiant si l'utilisateur est admin ou propriétaire de la ressource.
-    """
-    def has_object_permission(self, request, view, obj):
-        # Admin a tous les droits
-        if request.user.is_staff or request.user.is_superuser:
-            return True
-        
-        # Vérification spécifique selon le type d'objet
-        if hasattr(obj, 'author_user'):
-            return obj.author_user == request.user
-        
-        # Pour les utilisateurs, vérifier si c'est le même utilisateur
-        if isinstance(obj, User):
-            return obj == request.user
-        
-        return False
-
-
-class IsAdminOrProjectContributor(permissions.BasePermission):
-    """
-    Permission vérifiant si l'utilisateur est admin ou contributeur du projet.
+    Permission permettant uniquement aux super administrateurs d'accéder à la ressource.
     """
     def has_permission(self, request, view):
-        # Admin a tous les droits
-        if request.user.is_superuser:
-            return True
-        
-        # Pour les vues sur projet, vérifier si contributeur
-        if 'project_pk' in view.kwargs:
-            return Contributor.objects.filter(
-                user=request.user,
-                project_id=view.kwargs['project_pk']
-            ).exists()
-        
-        return False
+        return request.user.is_superuser
 
     def has_object_permission(self, request, view, obj):
-        # Admin a tous les droits
-        if request.user.is_superuser:
-            return True
-        
-        # Obtenir le projet (soit directement, soit via l'issue ou le commentaire)
+        return request.user.is_superuser
+
+
+class IsAuthor(permissions.BasePermission):
+    """
+    Permission vérifiant si l'utilisateur est l'auteur de la ressource.
+    """
+    def has_object_permission(self, request, view, obj):
+        # Vérifie si l'objet possède un champ 'author_user' et compare avec l'utilisateur authentifié
+        if hasattr(obj, 'author_user'):
+            return obj.author_user == request.user
+
+        return False
+
+
+class IsProjectContributor(permissions.BasePermission):
+    """
+    Permission vérifiant si l'utilisateur est contributeur d'un projet.
+    """
+    message = "Vous devez être contributeur pour accéder à ce projet."
+    def has_permission(self, request, view):
+        # On vérifie d'abord si on a un project_pk (pour les nested routes)
+        if 'project_pk' in view.kwargs:
+            project_id = view.kwargs['project_pk']
+        # Sinon on regarde si on a un pk (pour l'accès direct au projet)
+        elif 'pk' in view.kwargs:
+            project_id = view.kwargs['pk']
+        else:
+            return False
+            
+        return Contributor.objects.filter(
+            user=request.user,
+            project_id=project_id
+        ).exists()
+
+    def has_object_permission(self, request, view, obj):
         if hasattr(obj, 'project'):
             project = obj.project
         else:
             project = obj
-
         return Contributor.objects.filter(
             user=request.user,
             project=project
         ).exists()
+
+
+class IsProjectContributorOrIsAdmin(BasePermission):
+    """
+    Permission vérifiant si l'utilisateur est soit contributeur d'un projet soit superuser.
+    """
+    message = "Vous devez être contributeur ou administrateur pour accéder à cette ressource."
+    def has_permission(self, request, view):
+        return request.user and (IsProjectContributor().has_permission(request, view) or IsAdmin().has_permission(request, view))
+
+    def has_object_permission(self, request, view, obj):
+       return IsProjectContributor().has_object_permission(request, view, obj) or IsAdmin().has_object_permission(request, view, obj)
+
+
+class IsAuthorOrIsAdmin(BasePermission):
+    """
+    Permission vérifiant si l'utilisateur est soit auteur d'un projet soit superuser.
+    """
+    message = "Vous devez être l'auteur ou administrateur pour effectuer cette action."
+    def has_permission(self, request, view):
+        return request.user and IsAdmin().has_permission(request, view)
+        
+    def has_object_permission(self, request, view, obj):
+        return IsAuthor().has_object_permission(request, view, obj) or IsAdmin().has_object_permission(request, view, obj)
+
