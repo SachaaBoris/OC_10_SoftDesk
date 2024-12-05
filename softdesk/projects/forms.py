@@ -22,9 +22,7 @@ class ProjectAdminForm(forms.ModelForm):
         if user:
             Contributor.objects.create(
                 user=user,
-                project=project,
-                permission="Contributeur",  # Vous pouvez ajuster ce rôle
-                role="Contributeur"
+                project=project
             )
 
         return project
