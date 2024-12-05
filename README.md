@@ -7,7 +7,7 @@ SoftDesk Support est un outil de suivi de projet / gestion des problèmes techni
   
 # ● Comment installer et démarrer l'application  
 1. Prérequis :  
-    Avoir Python 3 installé  
+    Avoir Python 3 & PipEnv installés  
     Avoir téléchargé et dézipé l'archive du projet sur votre disque dur,  
     Ou clonez le repo avec cette commande :  
   ```  
@@ -20,9 +20,9 @@ SoftDesk Support est un outil de suivi de projet / gestion des problèmes techni
   
 3. Installer l'environnement virtuel :  
     Depuis votre console favorite, naviguez jusqu'au répertoire du projet  
-    Pour créer l'environnement virtuel rentrez la ligne de commande : `py -m venv ./venv`  
-    Activez ensuite l'environnement virtuel en rentrant la commande : `venv\Scripts\activate`  
-    Installer les requirements du projet avec la commande : `py -m pip install -r requirements.txt`  
+	Si vous voulez créer l'environnement virtuel dans le repertoire du projet : `mkdir .venv`  
+    Pour installer les dépendances, rentrez la ligne de commande : `pipenv install`  
+    Activez ensuite l'environnement virtuel en rentrant la commande : `pipenv shell`   
   
 4. Démarrer le serveur :  
     Toujours dans la console et à la racine du projet, tapez la commande : `py softdesk/manage.py runserver`  

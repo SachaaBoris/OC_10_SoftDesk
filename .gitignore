@@ -4,6 +4,7 @@
 _WorkDir/*
 .idea/*
 venv/*
+.venv/*
 Include/*
 Lib/*
 Scripts/*
