@@ -4,10 +4,12 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
+from django.http import Http404
 from .models import Project, Contributor, Issue, Comment
 from .serializers import (
     ProjectSerializer,
     ContributorSerializer,
+    ContributorIdSerializer,
     IssueSerializer,
     CommentSerializer
 )
@@ -115,6 +117,36 @@ class ContributorViewSet(viewsets.ModelViewSet):
         
         # Sauvegarde le contributeur
         serializer.save(project=project)
+        
+        # Liste des utilisateurs à ajouter
+        contributors_usernames = request.data.get('contributors', [])
+
+        messages = []
+        
+        for username in contributors_usernames:
+            try:
+                user = User.objects.get(username=username)
+                if user != serializer.validated_data['author_user']:
+                    Contributor.objects.create(
+                        user=user,
+                        project=serializer.validated_data['project']
+                    )
+                    messages.append(f"Le contributeur '{username}' a bien été ajouté au projet {serializer.validated_data['project'].id}.")
+                else:
+                    messages.append(f"Le contributeur '{username}' est déjà l'auteur du projet.")
+            except User.DoesNotExist:
+                messages.append(f"Utilisateur '{username}' non trouvé.")
+            except Exception as e:
+                messages.append(f"Erreur lors de l'ajout du contributeur '{username}': {str(e)}")
+        
+        # Retourne les messages et les données
+        return Response(
+            {
+                "message": "Contributeurs ajoutés avec succès.",
+                "details": messages,
+            },
+            status=status.HTTP_201_CREATED
+        )
     
     def destroy(self, request, *args, **kwargs):
         # Vérifiez si l'utilisateur actuel est l'auteur du projet
@@ -204,22 +236,38 @@ class CommentViewSet(viewsets.ModelViewSet):
             permission_classes = [IsAuthenticated, IsAuthorOrIsAdmin]
         return [permission() for permission in permission_classes]
 
-    def get_queryset(self):
-        project_pk = self.kwargs['project_pk']
-        issue_pk = self.kwargs['issue_pk']
+    def get_queryset(self):    
+        project = get_object_or_404(Project, pk=self.kwargs['project_pk'])
+        issue = get_object_or_404(Issue, pk=self.kwargs['issue_pk'])
+        base_queryset = Comment.objects.select_related('issue', 'issue__project')
 
-        # Si admin, tous les commentaires, sinon vérifier
         if self.request.user.is_superuser:
-            return Comment.objects.filter(
-                issue__project_id=project_pk, 
-                issue_id=issue_pk
+            print("Utilisateur est superuser")
+            queryset = base_queryset.filter(
+                issue=issue,
+                issue__project=project
+            )
+        else:
+            print("Utilisateur est contributeur")
+            queryset = base_queryset.filter(
+                issue=issue,
+                issue__project=project,
+                issue__project__contributor__user=self.request.user
             )
 
-        return Comment.objects.filter(
-            issue__project_id=project_pk,
-            issue_id=issue_pk,
-            issue__project__contributor__user=self.request.user
-        )
+        return queryset
+
+    def get_object(self): 
+        queryset = self.get_queryset()
+        comment_pk = self.kwargs.get('pk')
+
+        try:
+            obj = get_object_or_404(queryset, pk=comment_pk)
+        except Http404:
+            raise Http404({"message": "Ce commentaire n'existe pas."})
+
+        self.check_object_permissions(self.request, obj)
+        return obj
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -231,10 +279,11 @@ class CommentViewSet(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
 
     def perform_create(self, serializer):
+        project = get_object_or_404(Project, pk=self.kwargs['project_pk'])
         issue = get_object_or_404(
             Issue, 
             pk=self.kwargs['issue_pk'], 
-            project_id=self.kwargs['project_pk']
+            project=project
         )
         serializer.save(
             issue=issue,
@@ -250,3 +299,53 @@ class CommentViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
         return super().update(request, *args, **kwargs)
+
+
+#class CommentViewSet(viewsets.ModelViewSet):
+#    serializer_class = CommentSerializer
+#    permission_classes = [IsAuthenticated, IsProjectContributorOrIsAdmin]
+#    pagination_class = CommentPagination
+#
+#    def get_serializer_context(self):
+#        context = super().get_serializer_context()
+#        context['view_action'] = self.action
+#        return context
+#
+#    def get_object(self):
+#        import traceback
+#        print("=== Début get_object ===")
+#        
+#        # Afficher la stack trace
+#        print("Stack trace:")
+#        traceback.print_stack()
+#        
+#        try:
+#            project = Project.objects.get(pk=self.kwargs['project_pk'])
+#            print(f"Type de project: {type(project)}")
+#            print(f"Project ID: {project.id}")
+#            
+#            issue = Issue.objects.get(pk=self.kwargs['issue_pk'], project=project)
+#            print(f"Type de issue: {type(issue)}")
+#            print(f"Issue ID: {issue.id}")
+#            
+#            comment = Comment.objects.select_related(
+#                'issue', 
+#                'issue__project'
+#            ).get(
+#                pk=self.kwargs['pk'],
+#                issue=issue
+#            )
+#            print(f"Type de comment: {type(comment)}")
+#            print(f"Comment ID: {comment.id}")
+#            
+#            self.check_object_permissions(self.request, comment)
+#            return comment
+#            
+#        except Exception as e:
+#            print(f"Exception dans get_object: {str(e)}")
+#            print("Stack trace de l'erreur:")
+#            traceback.print_exc()
+#            raise
+#
+#    def get_queryset(self):
+#        return Comment.objects.none()  # Temporairement désactivé pour debug

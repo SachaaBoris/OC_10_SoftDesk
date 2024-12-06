@@ -34,11 +34,10 @@ class IsProjectContributor(permissions.BasePermission):
     Permission vérifiant si l'utilisateur est contributeur d'un projet.
     """
     message = "Vous devez être contributeur pour accéder à ce projet."
+    
     def has_permission(self, request, view):
-        # On vérifie d'abord si on a un project_pk (pour les nested routes)
         if 'project_pk' in view.kwargs:
             project_id = view.kwargs['project_pk']
-        # Sinon on regarde si on a un pk (pour l'accès direct au projet)
         elif 'pk' in view.kwargs:
             project_id = view.kwargs['pk']
         else:
@@ -48,12 +47,15 @@ class IsProjectContributor(permissions.BasePermission):
             user=request.user,
             project_id=project_id
         ).exists()
-
+        
     def has_object_permission(self, request, view, obj):
         if hasattr(obj, 'project'):
             project = obj.project
+        elif hasattr(obj, 'issue'):
+            project = obj.issue.project
         else:
             project = obj
+            
         return Contributor.objects.filter(
             user=request.user,
             project=project

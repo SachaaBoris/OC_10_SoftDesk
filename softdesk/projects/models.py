@@ -128,7 +128,7 @@ class Issue(models.Model):
 
     def __str__(self):
         """String for representing the Model object."""
-        return f"issue: {self.id}, {self.title}; project: {self.project}"
+        return f"{self.id}, {self.title}; project: {self.project}"
 
 
 class Comment(models.Model):
@@ -153,8 +153,7 @@ class Comment(models.Model):
         ordering = ["-created_at"]
 
     def __str__(self):
-        """String for representing the Model object."""
-        return f"comment: {self.id}; issue: {self.issue}"
+        return f"{self.id}; issue: {self.issue}"
 
     @property
     def comment_id(self):

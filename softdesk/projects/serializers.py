@@ -106,9 +106,26 @@ class CommentSerializer(serializers.ModelSerializer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.context.get('view_action') == 'list':
-            # Limiter les champs pour la liste
             self.fields.pop('issue', None)
             self.fields.pop('created_at', None)
+
+    def validate(self, data):      
+        if self.instance:  # En mise à jour
+            issue = self.instance.issue
+        else:  # En création
+            view = self.context['view']
+            project = get_object_or_404(Project, pk=view.kwargs['project_pk'])
+            issue = get_object_or_404(
+                Issue, 
+                pk=view.kwargs['issue_pk'],
+                project=project
+            )
+
+        project_pk = self.context['view'].kwargs['project_pk']
+
+        if issue.project.id != int(project_pk):
+            raise serializers.ValidationError("L'issue ne correspond pas au projet.")
+        return data
 
 
 class IssueSerializer(serializers.ModelSerializer):
@@ -154,8 +171,6 @@ class IssueSerializer(serializers.ModelSerializer):
                     self.fields.pop('assigned_user', None)
                 if instance.comment_set.count() == 0:
                     self.fields.pop('comments', None)
-                #if not hasattr(instance, 'comments') or not instance.comments.exists():  # Vérifie si comments existe et contient des objets
-                #    self.fields.pop('comments', None)
 
     def get_comments(self, obj):
         comments = Comment.objects.filter(issue=obj)
@@ -220,7 +235,9 @@ class ProjectSerializer(serializers.ModelSerializer):
                     project=project
                 )
             except Exception as e:
-                print(f"Erreur lors de la création du contributeur auteur: {e}")
+                raise serializers.ValidationError(
+                    f"Erreur lors de la création du contributeur auteur : {str(e)}"
+                )
 
             # Ajouter les autres contributeurs
             for username in contributors_usernames:
@@ -233,12 +250,17 @@ class ProjectSerializer(serializers.ModelSerializer):
                                 project=project
                             )
                         except Exception as e:
-                            print(f"Erreur lors de la création du contributeur {username}: {e}")
+                            raise serializers.ValidationError(
+                                f"Erreur lors de la création du contributeur {username} : {str(e)}"
+                            )
                 except User.DoesNotExist:
-                    print(f"Utilisateur non trouvé: {username}")
+                    raise serializers.ValidationError(
+                        f"Utilisateur non trouvé : {username}"
+                    )
 
             return project
 
         except Exception as e:
-            print(f"Erreur lors de la création du projet: {e}")
-            raise serializers.ValidationError(f"Erreur lors de la création du projet: {str(e)}")
+            raise serializers.ValidationError(
+                f"Erreur lors de la création du projet : {str(e)}"
+            )
