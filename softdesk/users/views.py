@@ -3,7 +3,7 @@ Users views
 """
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
-from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import User
 from .serializers import UserDetailSerializer, UserCreateSerializer, UserListSerializer
@@ -16,13 +16,13 @@ class UserViewSet(viewsets.ModelViewSet):
     ViewSet pour gérer les opérations CRUD sur les utilisateurs.
     """
     pagination_class = UserPagination
-    
+
     def get_permissions(self):
         if self.action == 'create':
             # Accès public pour la création de compte
             return [IsAdminOrUnauthenticated()]
         return [IsAuthenticated(), IsAdminOrSelf()]
-    
+
     def get_serializer_class(self):
         if self.action == 'create':
             return UserCreateSerializer
@@ -47,7 +47,7 @@ class UserViewSet(viewsets.ModelViewSet):
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
-        
+
         # Vérifier si l'utilisateur peut modifier ces données
         if not (request.user.is_staff or request.user == instance):
             return Response(

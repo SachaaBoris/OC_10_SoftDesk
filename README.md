@@ -34,7 +34,8 @@ SoftDesk Support est un outil de suivi de projet / gestion des problèmes techni
 # ● Etapes supplémentaires facultatives  
 5. Démarrer une nouvelle BDD :  
 	Quittez le serveur (CTRL+C dans la console) si vous l'avez lancé et supprimez le fichier db.sqlite3  
-	Et rentrer les commandes suivantes pour créer une nouvelle BDD
+	Supprimez également les dossiers migrations dans projects et dans users  
+	Et rentrez les commandes suivantes pour créer une nouvelle BDD  
   ``` 
   py softdesk/manage.py makemigrations
   py softdesk/manage.py migrate

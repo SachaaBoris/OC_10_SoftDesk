@@ -3,7 +3,7 @@ Provides application serializers
 """
 from rest_framework import serializers
 from .models import User, Project, Contributor, Issue, Comment
-from django.core.exceptions import ValidationError
+from django.shortcuts import get_object_or_404
 
 
 class ContributorSerializer(serializers.ModelSerializer):
@@ -13,7 +13,6 @@ class ContributorSerializer(serializers.ModelSerializer):
     project = serializers.PrimaryKeyRelatedField(queryset=Project.objects.all())
     username = serializers.CharField(source='user.username', read_only=True)
     email = serializers.CharField(source='user.email', read_only=True)
-
 
     class Meta:
         model = Contributor
@@ -53,7 +52,7 @@ class ContributorSerializer(serializers.ModelSerializer):
         # Récupérer le projet depuis l'URL de la requête
         project_pk = self.context['view'].kwargs['project_pk']
         project = Project.objects.get(pk=project_pk)
-        
+
         created_contributors = []
         error_messages = []
 
@@ -61,7 +60,7 @@ class ContributorSerializer(serializers.ModelSerializer):
             try:
                 # Vérifier si l'utilisateur avec ce username existe
                 user = User.objects.get(username=username)
-                
+
                 # Vérifier si l'utilisateur est déjà un contributeur pour ce projet
                 if not Contributor.objects.filter(user=user, project=project).exists():
                     # S'il n'est pas encore un contributeur, on l'ajoute au projet
@@ -80,7 +79,7 @@ class ContributorSerializer(serializers.ModelSerializer):
         # Si des erreurs sont présentes et aucun contributeur n'a été créé, lever une exception
         if error_messages and not created_contributors:
             raise serializers.ValidationError({"errors": error_messages})
-            
+
         # Retourner la liste des contributeurs crées ou rien
         return created_contributors or None
 
@@ -109,14 +108,14 @@ class CommentSerializer(serializers.ModelSerializer):
             self.fields.pop('issue', None)
             self.fields.pop('created_at', None)
 
-    def validate(self, data):      
+    def validate(self, data):
         if self.instance:  # En mise à jour
             issue = self.instance.issue
         else:  # En création
             view = self.context['view']
             project = get_object_or_404(Project, pk=view.kwargs['project_pk'])
             issue = get_object_or_404(
-                Issue, 
+                Issue,
                 pk=view.kwargs['issue_pk'],
                 project=project
             )

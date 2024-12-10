@@ -1,10 +1,8 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from django.utils.translation import gettext_lazy as _
-from .models import User
 from .models import Project, Contributor
 from .models import Issue, Comment
-from .forms import ProjectAdminForm
 
 
 class UserAdmin(DjangoUserAdmin):
@@ -44,7 +42,7 @@ class UserAdmin(DjangoUserAdmin):
     )
     list_display = ("email", "username", "age", "is_staff")
     search_fields = ("email", "username", "age")
-    ordering = ("username",)
+    ordering = ("username", )
 
 
 class ContributorInline(admin.TabularInline):
@@ -54,8 +52,8 @@ class ContributorInline(admin.TabularInline):
 
 
 class ContributorAdmin(admin.ModelAdmin):
-    list_display = ['id','project', 'user']  # Liste des champs visibles
-    ordering = ("id",)
+    list_display = ['id', 'project', 'user']  # Liste des champs visibles
+    ordering = ("id", )
 
     def get_readonly_fields(self, request, obj=None):
         """Rendre le champ project en lecture seule pour un contributeur existant."""
@@ -68,11 +66,26 @@ class ProjectAdmin(admin.ModelAdmin):
     """Admin view for Project."""
 
     # Affichage des champs dans la vue d'administration
-    list_display = ("id", "title", "description", "type", "author_user", "created_at", "get_contributors")
-    fields = ("id", "title", "description", "type", "author_user", "created_at")
+    list_display = (
+        "id",
+        "title",
+        "description",
+        "type",
+        "author_user",
+        "created_at",
+        "get_contributors"
+    )
+    fields = (
+        "id",
+        "title",
+        "description",
+        "type",
+        "author_user",
+        "created_at"
+    )
 
     readonly_fields = ("created_at", "author_user")
-    
+
     # Ajouter les contributeurs en inline
     inlines = [ContributorInline]
 
@@ -85,16 +98,48 @@ class ProjectAdmin(admin.ModelAdmin):
 
 class IssueAdmin(admin.ModelAdmin):
     """Admin view for Issue."""
-    list_display = ('id', 'title', 'description', 'tag', 'priority', 'status', 'project', 'author_user', 'assigned_user', 'created_at')
-    fields = ('title', 'description', 'tag', 'priority', 'status', 'project', 'author_user', 'assigned_user', 'created_at')
-    readonly_fields = ('created_at',)
+    list_display = (
+        'id',
+        'title',
+        'description',
+        'tag',
+        'priority',
+        'status',
+        'project',
+        'author_user',
+        'assigned_user',
+        'created_at'
+    )
+    fields = (
+        'title',
+        'description',
+        'tag',
+        'priority',
+        'status',
+        'project',
+        'author_user',
+        'assigned_user',
+        'created_at'
+    )
+    readonly_fields = ('created_at', )
 
 
 class CommentAdmin(admin.ModelAdmin):
     """Admin view for the Comment model."""
-    list_display = ('id', 'description', 'issue', 'author_user', 'created_at')
-    fields = ('description', 'issue', 'author_user', 'created_at')
-    readonly_fields = ('created_at',)
+    list_display = (
+        'id',
+        'description',
+        'issue',
+        'author_user',
+        'created_at'
+    )
+    fields = (
+        'description',
+        'issue',
+        'author_user',
+        'created_at'
+    )
+    readonly_fields = ('created_at', )
 
 
 # Register your models here.

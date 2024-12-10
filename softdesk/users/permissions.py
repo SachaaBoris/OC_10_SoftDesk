@@ -12,7 +12,7 @@ class IsAdminOrSelf(permissions.BasePermission):
         # Admins peuvent tout faire
         if request.user.is_staff or request.user.is_superuser:
             return True
-        
+
         # Pour les opérations de création (POST)
         if view.action == 'create':
             return True
@@ -24,14 +24,14 @@ class IsAdminOrSelf(permissions.BasePermission):
         # Pour les autres opérations, vérifier l'ID de l'utilisateur
         if 'pk' in view.kwargs:
             return str(request.user.pk) == str(view.kwargs['pk'])
-        
+
         return False
 
     def has_object_permission(self, request, view, obj):
         # Admins peuvent tout faire
         if request.user.is_staff or request.user.is_superuser:
             return True
-            
+
         # L'utilisateur ne peut accéder qu'à ses propres données
         return obj == request.user
 
@@ -45,10 +45,10 @@ class IsAdminOrUnauthenticated(permissions.BasePermission):
         if not request.user.is_authenticated:
             print("Utilisateur non authentifié - Accès autorisé")
             return True
-        
+
         # Autorise si l'utilisateur est admin (staff ou superuser)
         if request.user.is_staff or request.user.is_superuser:
             print("Admin user - Accès autorisé")
             return True
-        
+
         return False

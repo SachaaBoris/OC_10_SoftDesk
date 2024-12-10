@@ -2,7 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import BaseUserManager
-from datetime import date, timedelta
+from datetime import date
 
 
 class UserManager(BaseUserManager):
@@ -14,9 +14,9 @@ class UserManager(BaseUserManager):
         """Create and save a User with the given email, username, dob, and password."""
         email = self.normalize_email(email)
         user = self.model(
-            email=email, 
-            username=username, 
-            dob=dob, 
+            email=email,
+            username=username,
+            dob=dob,
             can_be_contacted=extra_fields.pop('can_be_contacted', False),
             can_data_be_shared=extra_fields.pop('can_data_be_shared', False),
             **extra_fields
