@@ -180,7 +180,16 @@ class IssueSerializer(serializers.ModelSerializer):
 
 
 class ProjectSerializer(serializers.ModelSerializer):
-    contributors = ContributorIdSerializer(source='contributor_set', many=True, read_only=True)
+    contributors = serializers.ListField(
+        child=serializers.CharField(),
+        required=False,
+        write_only=True
+    )
+    project_contributors = ContributorIdSerializer(
+        source='contributor_set',
+        many=True,
+        read_only=True
+    )
     issues = serializers.SerializerMethodField()
 
     class Meta:
@@ -193,6 +202,7 @@ class ProjectSerializer(serializers.ModelSerializer):
             'author_user',
             'created_at',
             'contributors',
+            'project_contributors',
             'issues'
         ]
         read_only_fields = ['author_user', 'created_at']
@@ -200,66 +210,83 @@ class ProjectSerializer(serializers.ModelSerializer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.context.get('view_action') == 'list':
-            # Limiter les champs pour la liste
             self.fields.pop('description', None)
             self.fields.pop('created_at', None)
             self.fields.pop('contributors', None)
+            self.fields.pop('project_contributors', None)
             self.fields.pop('issues', None)
         else:
-            # Obtenir l'instance du projet si disponible
             instance = self.instance if hasattr(self, 'instance') else None
             if instance:
-                # Poper les listes vides
                 if instance.contributor_set.count() == 0:
-                    self.fields.pop('contributors', None)
+                    self.fields.pop('project_contributors', None)
                 if instance.issue_set.count() == 0:
                     self.fields.pop('issues', None)
 
     def get_issues(self, obj):
-        # Récupérer uniquement les IDs des issues liées à ce projet
         return list(Issue.objects.filter(project=obj).values_list('id', flat=True))
 
-    def create(self, validated_data):
+    def _manage_contributors(self, project, usernames, author_user):
+        """
+        Méthode pour gérer les contributeurs d'un projet
+        """
+        # Créer/Vérifier le contributeur auteur
         try:
-            # Extraire et supprimer les contributeurs des données validées
-            contributors_usernames = validated_data.pop('contributors', [])
+            Contributor.objects.get_or_create(
+                user=author_user,
+                project=project
+            )
+        except Exception as e:
+            raise serializers.ValidationError(
+                f"Erreur lors de la gestion du contributeur auteur : {str(e)}"
+            )
 
-            # Créer le projet
-            project = Project.objects.create(**validated_data)
+        # Gérer les autres contributeurs
+        current_contributors = set(project.contributor_set.values_list('user__username', flat=True))
+        new_contributors = set(usernames)
 
-            # Créer le contributeur pour l'auteur dans une transaction
+        # Ajouter les nouveaux contributeurs
+        for username in new_contributors - current_contributors:
             try:
-                Contributor.objects.create(
-                    user=validated_data['author_user'],
-                    project=project
+                user = User.objects.get(username=username)
+                if user != author_user:
+                    Contributor.objects.get_or_create(
+                        user=user,
+                        project=project
+                    )
+            except User.DoesNotExist:
+                raise serializers.ValidationError(
+                    f"Utilisateur non trouvé : {username}"
                 )
             except Exception as e:
                 raise serializers.ValidationError(
-                    f"Erreur lors de la création du contributeur auteur : {str(e)}"
+                    f"Erreur lors de l'ajout du contributeur {username} : {str(e)}"
                 )
 
-            # Ajouter les autres contributeurs
-            for username in contributors_usernames:
-                try:
-                    user = User.objects.get(username=username)
-                    if user != validated_data['author_user']:
-                        try:
-                            Contributor.objects.create(
-                                user=user,
-                                project=project
-                            )
-                        except Exception as e:
-                            raise serializers.ValidationError(
-                                f"Erreur lors de la création du contributeur {username} : {str(e)}"
-                            )
-                except User.DoesNotExist:
-                    raise serializers.ValidationError(
-                        f"Utilisateur non trouvé : {username}"
-                    )
+        # Supprimer les contributeurs retirés (sauf l'auteur)
+        contributors_to_remove = current_contributors - new_contributors - {author_user.username}
+        if contributors_to_remove:
+            Contributor.objects.filter(
+                project=project,
+                user__username__in=contributors_to_remove
+            ).delete()
 
+    def create(self, validated_data):
+        contributors = validated_data.pop('contributors', [])
+        try:
+            project = Project.objects.create(**validated_data)
+            self._manage_contributors(project, contributors, validated_data['author_user'])
             return project
-
         except Exception as e:
-            raise serializers.ValidationError(
-                f"Erreur lors de la création du projet : {str(e)}"
-            )
+            raise serializers.ValidationError(f"Erreur lors de la création du projet : {str(e)}")
+
+    def update(self, instance, validated_data):
+        contributors = validated_data.pop('contributors', [])
+        try:
+            for attr, value in validated_data.items():
+                setattr(instance, attr, value)
+            instance.save()
+            self._manage_contributors(instance, contributors, instance.author_user)
+            return instance
+        except Exception as e:
+            raise serializers.ValidationError(f"Erreur lors de la mise à jour du projet : {str(e)}")

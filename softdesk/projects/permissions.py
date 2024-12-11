@@ -91,10 +91,12 @@ class IsAuthorOrIsAdmin(BasePermission):
     message = "Vous devez être l'auteur ou administrateur pour effectuer cette action."
 
     def has_permission(self, request, view):
-        return request.user and IsAdmin().has_permission(request, view)
+        # Vérifie simplement si l'utilisateur est authentifié
+        return bool(request.user and request.user.is_authenticated)
 
     def has_object_permission(self, request, view, obj):
+        # Vérifie si l'utilisateur est l'auteur de l'objet OU est admin
         return (
-            IsAuthor().has_object_permission(request, view, obj)
-            or IsAdmin().has_object_permission(request, view, obj)
+            obj.author_user == request.user  # Vérifie directement si l'utilisateur est l'auteur
+            or request.user.is_superuser     # Vérifie si l'utilisateur est admin
         )

@@ -53,22 +53,20 @@ SoftDesk Support est un outil de suivi de projet / gestion des problèmes techni
 	
   
 :black_circle:  
-
-# ● Documentation de l'API :scroll:  
   
   
 # API Endpoints  
   
----
+---  
   
 ### Authentication
 | Méthode | Endpoint                                  | Description                      |
 |---------|-------------------------------------------|----------------------------------|
 | POST    | /softdesk_api/login/                     | Obtenir un token JWT            |
 | POST    | /softdesk_api/login/refresh/             | Rafraîchir un token JWT         |
-
----
-
+  
+---  
+  
 ### Users
 | Méthode | Endpoint                                  | Description                      |
 |---------|-------------------------------------------|----------------------------------|
@@ -77,9 +75,9 @@ SoftDesk Support est un outil de suivi de projet / gestion des problèmes techni
 | GET     | /softdesk_api/users/{user_id}/           | Détails d'un utilisateur        |
 | PUT     | /softdesk_api/users/{user_id}/           | Modifier un utilisateur         |
 | DELETE  | /softdesk_api/users/{user_id}/           | Supprimer un utilisateur        |
-
----
-
+  
+---  
+  
 ### Projects
 | Méthode | Endpoint                                  | Description                      |
 |---------|-------------------------------------------|----------------------------------|
@@ -88,9 +86,9 @@ SoftDesk Support est un outil de suivi de projet / gestion des problèmes techni
 | GET     | /softdesk_api/projects/{project_id}/     | Détails d'un projet             |
 | PUT     | /softdesk_api/projects/{project_id}/     | Modifier un projet              |
 | DELETE  | /softdesk_api/projects/{project_id}/     | Supprimer un projet             |
-
----
-
+  
+---  
+  
 ### Contributors
 | Méthode | Endpoint                                  | Description                      |
 |---------|-------------------------------------------|----------------------------------|
@@ -98,9 +96,9 @@ SoftDesk Support est un outil de suivi de projet / gestion des problèmes techni
 | POST    | /softdesk_api/projects/{project_id}/contributors/      | Ajouter un contributeur         |
 | GET     | /softdesk_api/projects/{project_id}/contributors/{contributor_id}/ | Détails d'un contributeur       |
 | DELETE  | /softdesk_api/projects/{project_id}/contributors/{contributor_id}/ | Supprimer un contributeur       |
-
----
-
+  
+---  
+  
 ### Issues
 | Méthode | Endpoint                                  | Description                      |
 |---------|-------------------------------------------|----------------------------------|
@@ -109,9 +107,9 @@ SoftDesk Support est un outil de suivi de projet / gestion des problèmes techni
 | GET     | /softdesk_api/projects/{project_id}/issues/{issue_id}/| Détails d'une issue             |
 | PUT     | /softdesk_api/projects/{project_id}/issues/{issue_id}/| Modifier une issue              |
 | DELETE  | /softdesk_api/projects/{project_id}/issues/{issue_id}/| Supprimer une issue             |
-
----
-
+  
+---  
+  
 ### Comments
 | Méthode | Endpoint                                  | Description                      |
 |---------|-------------------------------------------|----------------------------------|
@@ -120,14 +118,14 @@ SoftDesk Support est un outil de suivi de projet / gestion des problèmes techni
 | GET     | /softdesk_api/projects/{project_id}/issues/{issue_id}/comments/{comment_id}/  | Détails d'un commentaire        |
 | PUT     | /softdesk_api/projects/{project_id}/issues/{issue_id}/comments/{comment_id}/  | Modifier un commentaire         |
 | DELETE  | /softdesk_api/projects/{project_id}/issues/{issue_id}/comments/{comment_id}/  | Supprimer un commentaire        |
-
----
+  
+---  
   
   
 # API Permissions :  
   
----
-
+---  
+  
 ### Users
 | Méthode | Condition                                                   | Description                                      |
 |---------|-------------------------------------------------------------|--------------------------------------------------|
@@ -136,9 +134,9 @@ SoftDesk Support est un outil de suivi de projet / gestion des problèmes techni
 | GET     | user_id == authenticated user ou admin                      | Donne les infos d'un utilisateur                |
 | PUT     | user_id == authenticated user ou admin                      | Met à jour les infos d'un utilisateur           |
 | DELETE  | user_id == authenticated user ou admin                      | Supprime un utilisateur                         |
-
----
-
+  
+---  
+  
 ### Projets
 | Méthode | Condition                                                   | Description                                      |
 |---------|-------------------------------------------------------------|--------------------------------------------------|
@@ -147,9 +145,9 @@ SoftDesk Support est un outil de suivi de projet / gestion des problèmes techni
 | GET     | Authenticated contrib ou admin                              | Détails d'un projet                             |
 | PUT     | Authenticated project_author ou admin                       | Met à jour les infos d'un projet                |
 | DELETE  | Authenticated project_author ou admin                       | Supprime un projet                              |
-
----
-
+  
+---  
+  
 ### Contributeurs
 | Méthode | Condition                                                   | Description                                      |
 |---------|-------------------------------------------------------------|--------------------------------------------------|
@@ -157,9 +155,9 @@ SoftDesk Support est un outil de suivi de projet / gestion des problèmes techni
 | POST    | Authenticated project_author ou admin                       | Ajoute un ou plusieurs contributeurs            |
 | GET     | Authenticated contributor ou admin + user can_be_contacted  | Donne les infos d'un contributeur               |
 | DELETE  | Authenticated project_author ou admin                       | Supprime un ou plusieurs contributeurs          |
-
----
-
+  
+---  
+  
 ### Issues
 | Méthode | Condition                                                   | Description                                      |
 |---------|-------------------------------------------------------------|--------------------------------------------------|
@@ -168,9 +166,9 @@ SoftDesk Support est un outil de suivi de projet / gestion des problèmes techni
 | GET     | Authenticated contributor ou admin                          | Donne les infos d'une issue                     |
 | PUT     | Authenticated issue_author ou admin                         | Met à jour les infos d'une issue                |
 | DELETE  | Authenticated issue_author ou admin                         | Supprime une issue                              |
-
----
-
+  
+---  
+  
 ### Commentaires
 | Méthode | Condition                                                   | Description                                      |
 |---------|-------------------------------------------------------------|--------------------------------------------------|
@@ -179,33 +177,14 @@ SoftDesk Support est un outil de suivi de projet / gestion des problèmes techni
 | GET     | Authenticated contributor ou admin                          | Liste les commentaires d'une issue              |
 | PUT     | Authenticated comment_author ou admin                       | Met à jour un commentaire                       |
 | DELETE  | Authenticated comment_author ou admin                       | Supprime un commentaire                         |
-
----
+  
+---  
+  
+:black_circle:  
   
   
-## Obtain Admin token
-
-```
-POST {{base_url}}/softdesk_api/login/
-```
-
-This is a POST request, submitting data to an API via the request body. This request submits JSON data, and the data is reflected in the response.
-
-A successful POST request typically returns a `200 OK` or `201 Created` response code.
-
-### Request
-
-> 
-> **Body**
-> 
-> ```
-> {
->   "username": "user",
->   "password": "@123456789"
-> }
-> ```
-> 
-
+# ● Documentation de l'API :scroll: 
+  
 ## Obtain User token
 
 ```
@@ -246,8 +225,7 @@ A successful POST request typically returns a `200 OK` or `201 Created` response
 > 
 > ```
 > {
->   "username": "user",
->   "password": "@123456789"
+>   "refresh": "refresh_token"
 > }
 > ```
 > 
@@ -377,6 +355,17 @@ PUT {{base_url}}/softdesk_api/projects/#/
 ### Request
 
 > 
+> **Body**
+> 
+> ```
+> {
+>   "title": "Project title",
+>   "description": "Project description.",
+>   "type": "Front-End",
+>   "contributors": ["username1","username2"]
+> }
+> ```
+> 
 
 ## Project
 
@@ -482,6 +471,19 @@ PUT {{base_url}}/softdesk_api/projects/#/issues/#/
 ### Request
 
 > 
+> **Body**
+> 
+> ```
+> {
+>   "title": "Issue title",
+>   "description": "Issue description",
+>   "tag": "BUG",
+>   "priority": "ÉLEVÉE",
+>   "status": "EN COURS",
+>   "assigned_user": #
+> }
+> ```
+> 
 
 ## Issue
 
@@ -537,6 +539,14 @@ PUT {{base_url}}/softdesk_api/projects/#/issues/#/comments/#/
 
 ### Request
 
+> 
+> **Body**
+> 
+> ```
+> {
+>   "description": "Users comment."
+> }
+> ```
 > 
 
 ## Comment

@@ -148,13 +148,25 @@ class ContributorViewSet(viewsets.ModelViewSet):
         )
 
     def destroy(self, request, *args, **kwargs):
-        # Vérifiez si l'utilisateur actuel est l'auteur du projet
+        # Récupérer l'objet Contributeur
         contributor = self.get_object()
-        if contributor.project.author_user != request.user:
-            raise PermissionDenied("Vous devez être l'auteur du projet pour supprimer ce contributeur.")
 
-        # Si l'utilisateur est l'auteur, effectuez la suppression
-        return super().destroy(request, *args, **kwargs)
+        # Vérifier si l'utilisateur actuel est l'auteur du projet
+        if contributor.project.author_user != request.user:
+            raise PermissionDenied("Seul l'auteur du projet peut supprimer des contributeurs.")
+
+        # Empêcher la suppression de l'auteur lui-même
+        if contributor.user == request.user:
+            raise PermissionDenied("Vous ne pouvez pas vous retirer en tant qu'auteur du projet.")
+
+        # Effectuer la suppression
+        super().destroy(request, *args, **kwargs)
+
+        # Retourner un message de confirmation
+        return Response(
+            {"message": "Le contributeur a bien été retiré de ce projet."},
+            status=status.HTTP_200_OK
+        )
 
 
 class IssueViewSet(viewsets.ModelViewSet):
@@ -207,7 +219,7 @@ class IssueViewSet(viewsets.ModelViewSet):
     def update(self, request, *args, **kwargs):
         # Seul l'auteur de l'issue ou l'admin peut modifier
         instance = self.get_object()
-        if not (request.request.user.is_superuser or instance.author_user == request.user):
+        if not (request.user.is_superuser or instance.author_user == request.user):
             return Response(
                 {"detail": "Vous n'êtes pas autorisé à modifier cette issue."},
                 status=status.HTTP_403_FORBIDDEN
@@ -292,7 +304,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     def update(self, request, *args, **kwargs):
         # Seul l'auteur du commentaire ou l'admin peut modifier
         instance = self.get_object()
-        if not (request.request.user.is_superuser or instance.author_user == request.user):
+        if not (request.user.is_superuser or instance.author_user == request.user):
             return Response(
                 {"detail": "Vous n'êtes pas autorisé à modifier ce commentaire."},
                 status=status.HTTP_403_FORBIDDEN
